@@ -32,6 +32,13 @@ void onActionClicked() {
 }
 
 class HelloRectangle extends StatelessWidget {
+  HelloRectangle();
+
+  factory HelloRectangle.forDesignTime() {
+    // TODO: add arguments
+    return new HelloRectangle();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Center(
