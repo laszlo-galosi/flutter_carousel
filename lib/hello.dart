@@ -35,7 +35,6 @@ class HelloRectangle extends StatelessWidget {
   HelloRectangle();
 
   factory HelloRectangle.forDesignTime() {
-    // TODO: add arguments
     return new HelloRectangle();
   }
 

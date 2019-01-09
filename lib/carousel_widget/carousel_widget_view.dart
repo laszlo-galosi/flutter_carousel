@@ -1,46 +1,76 @@
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_carousel/globals.dart' as globals;
+import 'package:flutter_carousel/resources.dart' as res;
 
 import './carousel_widget_view_model.dart';
 
-class CarouselWidgetView extends StatelessWidget {
-  final ValueChanged<CarouselWidgetViewModel> updateModel;
+class CarouselPageWidget extends StatefulWidget {
+  @override
+  _CarouselPageWidgetState createState() => new _CarouselPageWidgetState();
+}
 
-  const CarouselWidgetView({Key key, this.updateModel}) : super(key: key);
+class _CarouselPageWidgetState extends State<CarouselPageWidget> {
+  @override
+  Widget build(BuildContext context) {
+    return new CarouselWidget(
+        child: new Scaffold(
+            appBar: new AppBar(
+              title: new Text('Carousel Demo', style: res.textStyleTitleDark),
+            ),
+            body: new CarouselWidgetView(),
+            floatingActionButton: AutoplayButton()));
+  }
+}
+
+class AutoplayButton extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final CarouselWidgetState state = CarouselWidget.of(context);
+    return new FloatingActionButton(
+        tooltip: "Autoplay",
+        child: Icon(state.autoPlay ? Icons.pause : Icons.play_arrow),
+        onPressed: () {
+          state.setAutoPlay(!state.autoPlay);
+        });
+  }
+}
+
+class CarouselWidgetView extends StatelessWidget {
+  const CarouselWidgetView({Key key}) : super(key: key);
 
   factory CarouselWidgetView.forDesignTime() {
-    // TODO: add arguments
     return new CarouselWidgetView();
   }
 
   @override
   Widget build(BuildContext context) {
+    CarouselWidgetState state = CarouselWidget.of(context);
     return Column(children: [
       CarouselSlider(
         items: _carouselWidthIndicatorUI,
         aspectRatio: 2.0,
         updateCallback: (index) {
-          updateModel(CarouselWidgetViewModel(currentPage: index));
+          state.setCurrentPage(index);
         },
-        autoPlay: CarouselWidgetViewModel.of(context)?.autoPlay ?? false,
+        autoPlay: state?.autoPlay ?? false,
       ),
       Container(
           child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: globals.map<Widget>(globals.imageNames, (index, name) {
-          return Container(
-            width: 8.0,
-            height: 8.0,
-            margin: EdgeInsets.symmetric(vertical: 10.0, horizontal: 2.0),
-            decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: CarouselWidgetViewModel.of(context)?.currentPage == index
-                    ? Color.fromRGBO(0, 0, 0, 0.9)
-                    : Color.fromRGBO(0, 0, 0, 0.4)),
-          );
-        }),
-      ))
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: globals.map<Widget>(globals.imageNames, (index, name) {
+              return Container(
+                width: 8.0,
+                height: 8.0,
+                margin: EdgeInsets.symmetric(vertical: 10.0, horizontal: 2.0),
+                decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: state?.currentPage == index
+                        ? Color.fromRGBO(0, 0, 0, 0.9)
+                        : Color.fromRGBO(0, 0, 0, 0.4)),
+              );
+            }),
+          ))
     ]);
   }
 }
