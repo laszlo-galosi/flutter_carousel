@@ -32,9 +32,14 @@ class ShoppingCartWidget extends StatefulWidget {
   @override
   ShoppingCartWidgetState createState() => new ShoppingCartWidgetState();
 
-  static ShoppingCartWidgetState of(BuildContext context) {
-    return (context.inheritFromWidgetOfExactType(
-            _ShoppingCartModelBindingWidget) as _ShoppingCartModelBindingWidget)
+  static ShoppingCartWidgetState of(
+      [BuildContext context, bool rebuild = true]) {
+    return (rebuild
+        ? context.inheritFromWidgetOfExactType(
+        _ShoppingCartModelBindingWidget)
+    as _ShoppingCartModelBindingWidget
+        : context.ancestorWidgetOfExactType(_ShoppingCartModelBindingWidget)
+    as _ShoppingCartModelBindingWidget)
         .data;
   }
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_carousel/navigation/navigation_view_model.dart';
 import 'package:flutter_carousel/resources.dart' as res;
 
 import './shopping_cart_view_model.dart';
@@ -7,7 +8,6 @@ class ShoppingPageWidget extends StatefulWidget {
   ShoppingPageWidget();
 
   factory ShoppingPageWidget.forDesignTime() {
-    // TODO: add arguments
     return new ShoppingPageWidget();
   }
 
@@ -18,10 +18,23 @@ class ShoppingPageWidget extends StatefulWidget {
 class _ShoppingPageWidgetState extends State<ShoppingPageWidget> {
   @override
   Widget build(BuildContext context) {
+    SharedDrawerState navState = SharedDrawer.of(context);
     return new ShoppingCartWidget(
         child: new Scaffold(
-            appBar: new AppBar(
-              title: new Text('ShoppingCart', style: res.textStyleTitleDark),
+            appBar: AppBar(
+              title: Text(navState.selectedItem?.title ?? "",
+                  style: res.textStyleTitleDark),
+              leading: IconButton(
+                icon:
+                Icon(navState.shouldGoBack ? Icons.arrow_back : Icons.menu),
+                onPressed: () {
+                  if (navState.shouldGoBack) {
+                    navState.navigator.currentState.pop();
+                  } else {
+                    RootScaffold.openDrawer(context);
+                  }
+                },
+              ),
             ),
             body: new ShoppingCartListWidget(),
             floatingActionButton: AddShoppingItemButton()));
@@ -29,7 +42,7 @@ class _ShoppingPageWidgetState extends State<ShoppingPageWidget> {
 }
 
 class ShoppingCartListWidget extends StatelessWidget {
-  ShoppingCartListWidget();
+  ShoppingCartListWidget({Key key});
 
   @override
   Widget build(BuildContext context) {
@@ -59,7 +72,7 @@ class ShoppingCartListWidget extends StatelessWidget {
 class AddShoppingItemButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final ShoppingCartWidgetState state = ShoppingCartWidget.of(context);
+    final ShoppingCartWidgetState state = ShoppingCartWidget.of(context, false);
     return new FloatingActionButton(
         tooltip: "Add Item",
         child: Icon(Icons.add),
