@@ -48,7 +48,7 @@ class _MyAppState extends State<MyApp> {
         Widget pageWidget = getPageForRouteName(settings.name);
         return Platform.isIOS
             ? new CupertinoPageRoute(
-            builder: (_) => pageWidget, settings: settings)
+                builder: (_) => pageWidget, settings: settings)
             : MaterialPageRoute(builder: (_) => pageWidget, settings: settings);
       },
       builder: (context, child) {

@@ -43,9 +43,7 @@ BorderDirectional borderBottom1 = new BorderDirectional(
     bottom: BorderSide(width: 1.0, color: Colors.black26));
 
 IconData backIcon(BuildContext context) {
-  switch (Theme
-      .of(context)
-      .platform) {
+  switch (Theme.of(context).platform) {
     case TargetPlatform.android:
     case TargetPlatform.fuchsia:
       return Icons.arrow_back;

@@ -5,7 +5,6 @@ typedef NavigationCallback = void Function(
 
 final List<NavigationItem> navigationMenuItems = [
   new NavigationItem(
-      id: 0,
       title: "Home",
       routeName: "/",
       icon: Icons.home,
@@ -15,7 +14,18 @@ final List<NavigationItem> navigationMenuItems = [
         controller.close();
       }),
   new NavigationItem(
-      id: 1,
+      title: "Widget Demo",
+      routeName: "/widget_demo",
+      icon: Icons.widgets,
+      description:
+          "Material and Cupertino Widget demo to showcase differences of the platforms.",
+      navigationCallback: (drawerState, controller) {
+        drawerState.setShouldGoBack(false);
+        drawerState.navigator?.currentState
+            ?.pushReplacementNamed("/widget_demo");
+        controller.close();
+      }),
+  new NavigationItem(
       title: "Carousel Demo",
       routeName: "/carousel",
       icon: Icons.widgets,
@@ -26,7 +36,6 @@ final List<NavigationItem> navigationMenuItems = [
         controller.close();
       }),
   new NavigationItem(
-      id: 2,
       title: "Shopping Cart",
       routeName: "/shopping",
       icon: Icons.shopping_cart,
@@ -40,7 +49,6 @@ final List<NavigationItem> navigationMenuItems = [
 ];
 
 class NavigationItem {
-  final int id;
   final String title;
   final String routeName;
   final IconData icon;
@@ -48,8 +56,7 @@ class NavigationItem {
   final NavigationCallback navigationCallback;
 
   NavigationItem(
-      {@required this.id,
-      @required this.title,
+      {@required this.title,
       this.routeName,
       this.icon,
       this.description,
@@ -148,7 +155,7 @@ class SharedDrawerState extends State<SharedDrawer> {
   /// Helper method to add an Item
   void addItem(int id, [String title, IconData icon]) {
     setState(() {
-      _items.add(new NavigationItem(id: id, title: title, icon: icon));
+      _items.add(new NavigationItem(title: title, icon: icon));
     });
   }
 

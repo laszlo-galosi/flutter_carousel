@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_carousel/navigation/navigation_view_model.dart';
 import 'package:flutter_carousel/resources.dart' as res;
@@ -28,12 +29,14 @@ class MainMenuWidget extends StatelessWidget {
               padding: res.edgeInsetsItemH16V8,
               width: double.infinity,
               child: new Column(children: <Widget>[
-                new RaisedButton(
+                FlatButton(
+                    color: Colors.indigoAccent,
+                    padding: EdgeInsets.symmetric(vertical: 8.0),
                     child: Container(
                       width: double.infinity,
                       child: new Text(
                         item.title,
-                        style: res.textStyleTitle,
+                        style: res.textStyleNormalDark,
                         textAlign: TextAlign.center,
                       ),
                     ),

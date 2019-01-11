@@ -4,6 +4,7 @@ import 'package:flutter_carousel/home_page/home_page_view.dart';
 import 'package:flutter_carousel/navigation/navigation_view_model.dart';
 import 'package:flutter_carousel/resources.dart' as res;
 import 'package:flutter_carousel/shopping_cart/shopping_cart_view.dart';
+import 'package:flutter_carousel/widget_demo/widget_demo_view.dart';
 
 class NavigationDrawerWidget extends StatelessWidget {
   NavigationDrawerWidget({Key key});
@@ -78,6 +79,8 @@ Widget getPageForRouteName(String routeName) {
       return CarouselPageWidget();
     case '/shopping':
       return ShoppingPageWidget();
+    case '/widget_demo':
+      return new WidgetDemoPageWidget();
     default:
       return Container(
           width: double.infinity,

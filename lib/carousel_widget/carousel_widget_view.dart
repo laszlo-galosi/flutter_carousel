@@ -58,47 +58,45 @@ class CarouselWidgetView extends StatelessWidget {
         carouselSlider,
         Container(
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: globals.map<Widget>(globals.imageNames, (index, name) {
-                return Container(
-                  width: 8.0,
-                  height: 8.0,
-                  margin: EdgeInsets.symmetric(vertical: 10.0, horizontal: 2.0),
-                  decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: state?.currentPage == index
-                          ? Color.fromRGBO(0, 0, 0, 0.9)
-                          : Color.fromRGBO(0, 0, 0, 0.4)),
-                );
-              }),
-            )),
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: globals.map<Widget>(globals.imageNames, (index, name) {
+            return Container(
+              width: 8.0,
+              height: 8.0,
+              margin: EdgeInsets.symmetric(vertical: 10.0, horizontal: 2.0),
+              decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: state?.currentPage == index
+                      ? Color.fromRGBO(0, 0, 0, 0.9)
+                      : Color.fromRGBO(0, 0, 0, 0.4)),
+            );
+          }),
+        )),
         Row(children: <Widget>[
           Expanded(
               child: new IconButton(
-                icon: new Icon(Icons.chevron_left),
-                iconSize: 32,
-                onPressed: () {
-                  carouselSlider.previousPage(
-                      duration: Duration(milliseconds: 300),
-                      curve: Curves.linear);
-                },
-              )),
+            icon: new Icon(Icons.chevron_left),
+            iconSize: 32,
+            onPressed: () {
+              carouselSlider.previousPage(
+                  duration: Duration(milliseconds: 300), curve: Curves.linear);
+            },
+          )),
           Expanded(
               child: Text(
-                "page: ${state.currentPage}",
-                style: res.textStyleNormal,
-                textAlign: TextAlign.center,
-              )),
+            "page: ${state.currentPage}",
+            style: res.textStyleNormal,
+            textAlign: TextAlign.center,
+          )),
           Expanded(
               child: new IconButton(
-                icon: new Icon(Icons.chevron_right),
-                iconSize: 32,
-                onPressed: () {
-                  carouselSlider.nextPage(
-                      duration: Duration(milliseconds: 300),
-                      curve: Curves.linear);
-                },
-              )),
+            icon: new Icon(Icons.chevron_right),
+            iconSize: 32,
+            onPressed: () {
+              carouselSlider.nextPage(
+                  duration: Duration(milliseconds: 300), curve: Curves.linear);
+            },
+          )),
         ]),
       ],
     );

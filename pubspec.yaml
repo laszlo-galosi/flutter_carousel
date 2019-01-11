@@ -45,6 +45,7 @@ flutter:
       - images/836945.jpg
       - images/941223.jpg
       - images/952679.jpg
+      - images/iOS-logo.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.io/assets-and-images/#resolution-aware.
