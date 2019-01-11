@@ -1,9 +1,9 @@
+import 'dart:io';
+
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_carousel/carousel_widget/carousel_widget_view.dart';
-import 'package:flutter_carousel/home_page/home_page_view.dart';
 import 'package:flutter_carousel/navigation/navigation_view.dart';
 import 'package:flutter_carousel/navigation/navigation_view_model.dart';
-import 'package:flutter_carousel/shopping_cart/shopping_cart_view.dart';
 
 void main() => runApp(MyApp());
 
@@ -37,12 +37,19 @@ class _MyAppState extends State<MyApp> {
         primarySwatch: Colors.indigo,
       ),
       initialRoute: '/',
-      routes: {
-        // When we navigate to the "/" route, build the FirstScreen Widget
-        '/': (context) => MainMenuWidget(),
-        // When we navigate to the other routes, cakk its PageWidgets respectively.
-        '/carousel': (context) => CarouselPageWidget(),
-        '/shopping': (context) => ShoppingPageWidget(),
+      /* routes: {
+          // When we navigate to the "/" route, build the FirstScreen Widget
+          '/': (context) => MainMenuWidget(),
+          // When we navigate to the other routes, cakk its PageWidgets respectively.
+          '/carousel': (context) => CarouselPageWidget(),
+          '/shopping': (context) => ShoppingPageWidget(),
+        },*/
+      onGenerateRoute: (RouteSettings settings) {
+        Widget pageWidget = getPageForRouteName(settings.name);
+        return Platform.isIOS
+            ? new CupertinoPageRoute(
+            builder: (_) => pageWidget, settings: settings)
+            : MaterialPageRoute(builder: (_) => pageWidget, settings: settings);
       },
       builder: (context, child) {
         return new SharedDrawer(
@@ -51,8 +58,7 @@ class _MyAppState extends State<MyApp> {
               drawer: NavigationDrawerWidget(),
               body: child,
             ));
-      },
-//      home: HomePageView(),
+      }, //      home: HomePageView(),
     );
   }
 }

@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_carousel/carousel_widget/carousel_widget_view.dart';
+import 'package:flutter_carousel/home_page/home_page_view.dart';
 import 'package:flutter_carousel/navigation/navigation_view_model.dart';
 import 'package:flutter_carousel/resources.dart' as res;
+import 'package:flutter_carousel/shopping_cart/shopping_cart_view.dart';
 
 class NavigationDrawerWidget extends StatelessWidget {
   NavigationDrawerWidget({Key key});
@@ -48,4 +51,39 @@ class NavigationDrawerWidget extends StatelessWidget {
     ),
     decoration: new BoxDecoration(color: Colors.indigo),
   );
+}
+
+class FadeInSlideOutRoute<T> extends MaterialPageRoute<T> {
+  FadeInSlideOutRoute({WidgetBuilder builder, RouteSettings settings})
+      : super(builder: builder, settings: settings);
+
+  @override
+  Widget buildTransitions(BuildContext context, Animation<double> animation,
+      Animation<double> secondaryAnimation, Widget child) {
+    if (settings.isInitialRoute) return child;
+    // Fades between routes. (If you don't want any animation,
+    // just return child.)
+    if (animation.status == AnimationStatus.reverse)
+      return super
+          .buildTransitions(context, animation, secondaryAnimation, child);
+    return FadeTransition(opacity: animation, child: child);
+  }
+}
+
+Widget getPageForRouteName(String routeName) {
+  switch (routeName) {
+    case '/':
+      return MainMenuWidget();
+    case '/carousel':
+      return CarouselPageWidget();
+    case '/shopping':
+      return ShoppingPageWidget();
+    default:
+      return Container(
+          width: double.infinity,
+          height: double.infinity,
+          padding: res.edgeInsetsItemH16V8,
+          child: Text("This route '$routeName' not yet implemented yet",
+              style: res.textStyleNormal, textAlign: TextAlign.center));
+  }
 }

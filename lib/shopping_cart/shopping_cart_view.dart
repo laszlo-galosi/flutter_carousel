@@ -25,8 +25,8 @@ class _ShoppingPageWidgetState extends State<ShoppingPageWidget> {
               title: Text(navState.selectedItem?.title ?? "",
                   style: res.textStyleTitleDark),
               leading: IconButton(
-                icon:
-                Icon(navState.shouldGoBack ? Icons.arrow_back : Icons.menu),
+                icon: Icon(
+                    navState.shouldGoBack ? res.backIcon(context) : Icons.menu),
                 onPressed: () {
                   if (navState.shouldGoBack) {
                     navState.navigator.currentState.pop();

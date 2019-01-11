@@ -24,32 +24,31 @@ class MainMenuWidget extends StatelessWidget {
                 .items()
                 .where((item) => "Home" != item.title)
                 .map<Widget>((item) {
-              return new Container(
-                  padding: res.edgeInsetsItemH16V8,
-                  width: double.infinity,
-                  child: new Column(children: <Widget>[
-                    new RaisedButton(
-                        child: Container(
-                          width: double.infinity,
-                          child: new Text(
-                            item.title,
-                            style: res.textStyleTitle,
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
-                        onPressed: () {
-                          state.setSelectedItem(item);
-                          if (state.navigator != null &&
-                              item.routeName != null) {
-                            state.setShouldGoBack(true);
-                            state.navigator?.currentState
-                                ?.pushNamed(item.routeName);
-                            drawerControllerState.close();
-                          }
-                        }),
-                    Text(item.description ?? "",
-                        style: res.textStyleLabel, textAlign: TextAlign.center),
-                  ]));
-            }).toList()));
+          return new Container(
+              padding: res.edgeInsetsItemH16V8,
+              width: double.infinity,
+              child: new Column(children: <Widget>[
+                new RaisedButton(
+                    child: Container(
+                      width: double.infinity,
+                      child: new Text(
+                        item.title,
+                        style: res.textStyleTitle,
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                    onPressed: () {
+                      state.setSelectedItem(item);
+                      if (state.navigator != null && item.routeName != null) {
+                        state.setShouldGoBack(true);
+                        state.navigator?.currentState
+                            ?.pushNamed(item.routeName);
+                        drawerControllerState.close();
+                      }
+                    }),
+                Text(item.description ?? "",
+                    style: res.textStyleLabel, textAlign: TextAlign.center),
+              ]));
+        }).toList()));
   }
 }
