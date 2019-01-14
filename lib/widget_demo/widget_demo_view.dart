@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_carousel/globals.dart';
@@ -32,72 +34,6 @@ class WidgetDef extends StatelessWidget {
   }
 }
 
-List<WidgetDef> widgetDef(bool isAndroid) {
-  List<WidgetDef> result = [];
-  return result;
-}
-
-List<WidgetDef> widgetDefs(bool isAndroid) {
-  Map<String, Widget> widgetMap = (isAndroid ? _androidWidgets : _iosWidgets);
-  return [
-    WidgetDef(
-        isAndroid: isAndroid,
-        builder: (context) {
-          return Column(children: <Widget>[
-            new Container(
-                width: double.infinity,
-                padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
-                child: new Text(
-                    isAndroid ? "MaterialButton" : "CupertinoButton",
-                    style: res.textStyleLabel)),
-            matchParent(widgetMap["Button"]),
-          ]);
-        }),
-    new WidgetDef(child: widgetMap["Switch"]),
-  ];
-}
-
-Map<String, Widget> _androidWidgets = {
-  "Button": new MaterialButton(
-      color: Colors.indigoAccent,
-      child: Text("Button", style: res.textStyleNormalDark),
-      onPressed: () {}),
-  "Switch": Switch(
-      value: false,
-      activeColor: Colors.indigoAccent,
-      onChanged: (bool value) {}),
-};
-
-class DemoWidget extends StatefulWidget {
-  DemoWidget({Key key, @required this.child});
-  final Widget child;
-
-  @override
-  DemoWidgetState createState() => new DemoWidgetState();
-}
-
-class DemoWidgetState extends State<DemoWidget> {
-  DemoWidgetState({Key key, @required this.child});
-  final Widget child;
-  bool isChecked = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return child;
-  }
-}
-
-Map<String, Widget> _iosWidgets = {
-  "Button": new CupertinoButton(
-      color: Colors.indigoAccent,
-      child: Text("Button", style: res.textStyleNormalDark),
-      onPressed: () {}),
-  "Switch": CupertinoSwitch(
-    value: true,
-    activeColor: Colors.indigoAccent,
-  ),
-};
-
 class WidgetDemoPageWidget extends StatefulWidget {
   WidgetDemoPageWidget();
 
@@ -114,7 +50,7 @@ class _WidgetDemoPageWidgetState extends State<WidgetDemoPageWidget> {
   Widget build(BuildContext context) {
     SharedDrawerState navState = SharedDrawer.of(context);
     return new DefaultTabController(
-        length: 2,
+        length: 3,
         child: new Scaffold(
             appBar: AppBar(
                 title: Text(navState.selectedItem?.title ?? "",
@@ -135,6 +71,7 @@ class _WidgetDemoPageWidgetState extends State<WidgetDemoPageWidget> {
                   tabs: [
                     Tab(text: "Android"),
                     Tab(text: "iOS"),
+                    Tab(text: "Adaptive"),
                   ],
                 )),
             body: TabBarView(
@@ -145,25 +82,157 @@ class _WidgetDemoPageWidgetState extends State<WidgetDemoPageWidget> {
                 new WidgetDemoTabPageWidget(
                   isAndroid: false,
                 ),
+                new WidgetDemoTabPageWidget(
+                    isAdaptive: true, isAndroid: !Platform.isIOS),
               ],
             )));
   }
 }
 
-class WidgetDemoTabPageWidget extends StatelessWidget {
-  WidgetDemoTabPageWidget({Key key, this.isAndroid = true});
+class WidgetDemoTabPageWidget extends StatefulWidget {
+  WidgetDemoTabPageWidget(
+      {Key key, this.isAndroid = true, this.isAdaptive = false});
 
   final bool isAndroid;
+  final bool isAdaptive;
+
+  @override
+  WidgetDemoTabPageState createState() =>
+      new WidgetDemoTabPageState(isAndroid, isAdaptive);
+}
+
+class WidgetDemoTabPageState extends State<WidgetDemoTabPageWidget> {
+  WidgetDemoTabPageState(this.isAndroid, this.isAdaptive);
+
+  final bool isAndroid;
+  final bool isAdaptive;
+  bool _switchValue = false;
+  bool _checkBoxValue = false;
 
   @override
   Widget build(BuildContext context) {
     return new ListView.builder(
-        itemCount: widgetDefs(isAndroid).length,
+        itemCount: _widgetDefs(isAndroid, isAdaptive, this).length,
         itemBuilder: (BuildContext ctx, int index) {
-          final widgetDef = widgetDefs(isAndroid)[index];
+          final widgetDef = _widgetDefs(isAndroid, isAdaptive, this)[index];
           return new DemoWidgetItem(child: widgetDef);
         });
   }
+
+  List<WidgetDef> _widgetDefs(
+      bool isAndroid, bool isAdaptive, WidgetDemoTabPageState state) {
+    Map<String, Widget> widgetMap;
+    if (isAdaptive)
+      widgetMap = _adaptiveWidgets(state);
+    else
+      widgetMap = (isAndroid ? _androidWidgets(state) : _iosWidgets(state));
+    return [
+      new WidgetDef(
+          isAndroid: isAndroid,
+          builder: (context) {
+            String label = "${widgetMap['Button'] == null ? "No ${isAdaptive ? 'adaptive' : ''} Button" : "${isAndroid ? "MaterialButton" : "CupertinoButton"}"}";
+            return Column(children: <Widget>[
+              new Container(
+                  width: double.infinity,
+                  padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
+                  child: new Text(
+                      label,
+                      style: res.textStyleLabel)),
+              matchParent(widgetMap["Button"]),
+            ]);
+          }),
+      new WidgetDef(
+          isAndroid: isAndroid,
+          builder: (context) {
+            return Column(children: <Widget>[
+              new Container(
+                  width: double.infinity,
+                  padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
+                  child: new Text(isAndroid ? "Switch ${isAdaptive? "(adaptive)" : ""}" : "CupertinoSwitch",
+                      style: res.textStyleLabel)),
+              Row(children: <Widget>[
+                widgetMap["Switch"],
+                Text(
+                    "This is a ${isAndroid ? "Switch" : "CupertionSwitch"} swithed ${state._switchValue ? "on" : "off"}")
+              ])
+            ]);
+          }),
+      new WidgetDef(
+          isAndroid: isAndroid,
+          builder: (context) {
+            String label = "${widgetMap['Checkbox'] == null ? "No ${isAdaptive ? 'adaptive' : ''} Checkbox" : "Checkbox"}";
+            return Column(children: <Widget>[
+              new Container(
+                  width: double.infinity,
+                  padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
+                  child: new Text(label, style: res.textStyleLabel)),
+              Row(children: <Widget>[
+                widgetMap["Checkbox"] ?? new Container(),
+                (widgetMap["Checkbox"] != null ?Text(
+                    "This is a Checkbox ${state._checkBoxValue ? "checked" : "unchecked"}")
+                    : new Container())
+              ])
+            ]);
+          }),
+    ];
+  }
+
+  Map<String, Widget> _androidWidgets(WidgetDemoTabPageState state) => {
+        "Button": new MaterialButton(
+            color: Colors.indigoAccent,
+            child: Text("Button", style: res.textStyleNormalDark),
+            onPressed: () {}),
+        "Switch": new Switch(
+            value: state._switchValue,
+            activeColor: Colors.indigoAccent,
+            onChanged: (bool value) {
+              state.setState(() {
+                state._switchValue = value;
+              });
+            }),
+         "Checkbox": new Checkbox(
+            value: state._checkBoxValue,
+            activeColor: Colors.indigoAccent,
+            onChanged: (bool value) {
+              state.setState(() {
+                state._checkBoxValue = value;
+              });
+            }),
+      };
+
+  Map<String, Widget> _iosWidgets(WidgetDemoTabPageState state) => {
+        "Button": new CupertinoButton(
+            color: Colors.indigoAccent,
+            child: Text("Button", style: res.textStyleNormalDark),
+            onPressed: () {}),
+        "Switch": new CupertinoSwitch(
+            value: state._switchValue,
+            activeColor: Colors.indigoAccent,
+            onChanged: (bool value) {
+              state.setState(() {
+                state._switchValue = value;
+              });
+            }),
+        "Checkbox": new Checkbox(
+            value: state._checkBoxValue,
+            activeColor: Colors.indigoAccent,
+            onChanged: (bool value) {
+              state.setState(() {
+                state._checkBoxValue = value;
+              });
+            })
+      };
+
+  Map<String, Widget> _adaptiveWidgets(WidgetDemoTabPageState state) => {
+        "Switch": new Switch.adaptive(
+            value: state._switchValue,
+            activeColor: Colors.indigoAccent,
+            onChanged: (bool value) {
+              state.setState(() {
+                state._switchValue = value;
+              });
+            }),
+      };
 }
 
 class DemoWidgetItem extends StatelessWidget {
@@ -177,6 +246,7 @@ class DemoWidgetItem extends StatelessWidget {
     return Container(
       padding: EdgeInsets.all(16.0),
       width: double.infinity,
+      height: 120.0,
       decoration: new BoxDecoration(border: res.borderBottom1),
       child: child,
     );
