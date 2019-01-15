@@ -3,6 +3,7 @@ import 'package:flutter_carousel/carousel_widget/carousel_widget_view.dart';
 import 'package:flutter_carousel/home_page/home_page_view.dart';
 import 'package:flutter_carousel/navigation/navigation_view_model.dart';
 import 'package:flutter_carousel/resources.dart' as res;
+import 'package:flutter_carousel/scratch_demo/scratch_card_view.dart';
 import 'package:flutter_carousel/shopping_cart/shopping_cart_view.dart';
 import 'package:flutter_carousel/widget_demo/widget_demo_view.dart';
 
@@ -26,7 +27,7 @@ class NavigationDrawerWidget extends StatelessWidget {
                 return new ListTile(
                   title: new Text(item?.title ?? "Title is null.",
                       style: res.textStyleMenu),
-                  leading: Icon(item?.icon ?? null),
+                  leading: item?.icon ?? null,
                   onTap: () {
                     state.setSelectedItemIndex(index - 1);
                     if (item.navigationCallback != null &&
@@ -81,12 +82,17 @@ Widget getPageForRouteName(String routeName) {
       return ShoppingPageWidget();
     case '/widget_demo':
       return new WidgetDemoPageWidget();
+    case "/scratch":
+      return new ScratchDemoPageWidget();
     default:
-      return Container(
-          width: double.infinity,
-          height: double.infinity,
-          padding: res.edgeInsetsItemH16V8,
-          child: Text("This route '$routeName' not yet implemented yet",
-              style: res.textStyleNormal, textAlign: TextAlign.center));
+      return Center(
+          child: Container(
+              width: double.infinity,
+              padding: res.edgeInsetsItemH16V8,
+              child: Text(
+                "This route '$routeName' not yet implemented yet",
+                style: res.textStyleNormal,
+                textAlign: TextAlign.center,
+              )));
   }
 }

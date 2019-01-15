@@ -7,7 +7,7 @@ final List<NavigationItem> navigationMenuItems = [
   new NavigationItem(
       title: "Home",
       routeName: "/",
-      icon: Icons.home,
+      icon: Icon(Icons.home),
       navigationCallback: (drawerState, controller) {
         drawerState.setShouldGoBack(false);
         drawerState.navigator?.currentState?.pushReplacementNamed("/");
@@ -16,7 +16,7 @@ final List<NavigationItem> navigationMenuItems = [
   new NavigationItem(
       title: "Widget Demo",
       routeName: "/widget_demo",
-      icon: Icons.widgets,
+      icon: Icon(Icons.widgets),
       description:
           "Material and Cupertino Widget demo to showcase differences of the platforms.",
       navigationCallback: (drawerState, controller) {
@@ -28,7 +28,7 @@ final List<NavigationItem> navigationMenuItems = [
   new NavigationItem(
       title: "Carousel Demo",
       routeName: "/carousel",
-      icon: Icons.widgets,
+      icon: Icon(Icons.widgets),
       description: "Carousel Widget with current page indicator.",
       navigationCallback: (drawerState, controller) {
         drawerState.setShouldGoBack(false);
@@ -38,12 +38,26 @@ final List<NavigationItem> navigationMenuItems = [
   new NavigationItem(
       title: "Shopping Cart",
       routeName: "/shopping",
-      icon: Icons.shopping_cart,
+      icon: Icon(Icons.shopping_cart),
       description:
           "Shopping Cart demo showcasing Flutter's StatefulWidget - InheritedWidget concept.",
       navigationCallback: (drawerState, controller) {
         drawerState.setShouldGoBack(false);
         drawerState.navigator?.currentState?.pushReplacementNamed("/shopping");
+        controller.close();
+      }),
+  new NavigationItem(
+      title: "Scratch Demo",
+      routeName: "/scratch",
+      icon: new Image.asset(
+        'images/ic_scratch.png',
+        width: 24.0,
+        height: 24.0,
+      ),
+      description: "Scratch view demo.",
+      navigationCallback: (drawerState, controller) {
+        drawerState.setShouldGoBack(false);
+        drawerState.navigator?.currentState?.pushReplacementNamed("/scratch");
         controller.close();
       })
 ];
@@ -51,7 +65,7 @@ final List<NavigationItem> navigationMenuItems = [
 class NavigationItem {
   final String title;
   final String routeName;
-  final IconData icon;
+  final Widget icon;
   final String description;
   final NavigationCallback navigationCallback;
 
@@ -153,7 +167,7 @@ class SharedDrawerState extends State<SharedDrawer> {
   }
 
   /// Helper method to add an Item
-  void addItem(int id, [String title, IconData icon]) {
+  void addItem(int id, [String title, Widget icon]) {
     setState(() {
       _items.add(new NavigationItem(title: title, icon: icon));
     });
