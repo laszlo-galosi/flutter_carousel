@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_carousel/carousel_widget/carousel_widget_view.dart';
 import 'package:flutter_carousel/home_page/home_page_view.dart';
+import 'package:flutter_carousel/infinite_list/infinite_list_demo_view_model.dart';
+import 'package:flutter_carousel/infinite_list/infinite_list_view.dart';
 import 'package:flutter_carousel/navigation/navigation_view_model.dart';
 import 'package:flutter_carousel/resources.dart' as res;
 import 'package:flutter_carousel/scratch_demo/scratch_demo_view.dart';
+import 'package:flutter_carousel/services/napisorsjegy_api.dart';
 import 'package:flutter_carousel/shopping_cart/shopping_cart_view.dart';
 import 'package:flutter_carousel/widget_demo/widget_demo_view.dart';
 
@@ -84,13 +87,16 @@ Widget getPageForRouteName(String routeName) {
       return new WidgetDemoPageWidget();
     case "/scratch":
       return new ScratchDemoPageWidget();
+    case "/infinite_list":
+      return new InfiniteListDemoPageWidget(
+          viewModel: InfiniteListDemoViewModel(api: NapisorsjegyApiService()));
     default:
       return Center(
           child: Container(
               width: double.infinity,
               padding: res.edgeInsetsItemH16V8,
               child: Text(
-                "This route '$routeName' not yet implemented yet",
+                "Route '$routeName' not yet implemented.",
                 style: res.textStyleNormal,
                 textAlign: TextAlign.center,
               )));

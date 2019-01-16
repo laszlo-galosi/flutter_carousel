@@ -14,6 +14,18 @@ final List<NavigationItem> navigationMenuItems = [
         controller.close();
       }),
   new NavigationItem(
+      title: "Infinite List Demo",
+      routeName: "/infinite_list",
+      icon: Icon(Icons.list),
+      description:
+          "Infinite paging list demo, calling a Rest Api with paged results.",
+      navigationCallback: (drawerState, controller) {
+        drawerState.setShouldGoBack(false);
+        drawerState.navigator?.currentState
+            ?.pushReplacementNamed("/infinite_list");
+        controller.close();
+      }),
+  new NavigationItem(
       title: "Scratch Demo",
       routeName: "/scratch",
       icon: new Image.asset(

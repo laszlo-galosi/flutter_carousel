@@ -45,7 +45,7 @@ class _ScratchDemoPageWidgetState extends State<ScratchDemoPageWidget> {
                   icon: Icon(Icons.refresh),
                   onPressed: () {
                     ScratchCardBindingWidgetState state =
-                        ScratchCardBindingWidget.of(context);
+                        ScratchCardBindingWidget.of(context, false);
                     state.revealPercent = 0.0;
                   },
                 )

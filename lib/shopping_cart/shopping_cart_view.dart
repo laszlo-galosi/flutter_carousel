@@ -76,6 +76,7 @@ class AddShoppingItemButton extends StatelessWidget {
     return new FloatingActionButton(
         tooltip: "Add Item",
         child: Icon(Icons.add),
+        backgroundColor: Colors.indigoAccent,
         onPressed: () {
           state.addItem("Item ${state.itemsCount}");
         });
