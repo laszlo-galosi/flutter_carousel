@@ -113,8 +113,8 @@ class ScratchCardWidgetState extends State<ScratchCardWidget> {
   /// is no longer in contact with the screen and was moving at a specific
   /// velocity when it stopped contacting the screen.
   void _onPanEnd(DragEndDetails details) {
-    _stopTimer();
     _capturePixels();
+    _stopTimer();
   }
 
   void _startTimer() {
