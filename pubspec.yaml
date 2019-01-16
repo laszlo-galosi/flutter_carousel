@@ -48,7 +48,6 @@ flutter:
       - images/952679.jpg
       - images/iOS-logo.png
       - images/ic_scratch.png
-      - images/ic_scratch_pattern.png
       - images/itt_kapard_new.png
 
   # An image asset can refer to one or more resolution-specific "variants", see

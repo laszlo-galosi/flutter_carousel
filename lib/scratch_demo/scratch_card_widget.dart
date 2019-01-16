@@ -3,121 +3,16 @@ import 'dart:math' as math;
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:flutter_carousel/navigation/navigation_view_model.dart';
-import 'package:flutter_carousel/resources.dart' as res;
-import 'package:sprintf/sprintf.dart';
-
-class ScratchDemoPageWidget extends StatefulWidget {
-  ScratchDemoPageWidget();
-
-  factory ScratchDemoPageWidget.forDesignTime() {
-    return new ScratchDemoPageWidget();
-  }
-
-  @override
-  _ScratchDemoPageWidgetState createState() =>
-      new _ScratchDemoPageWidgetState();
-}
-
-class _ScratchDemoPageWidgetState extends State<ScratchDemoPageWidget> {
-  double _reveleadPercent = 0.0;
-  GlobalKey _keyCover = GlobalKey();
-
-  @override
-  Widget build(BuildContext context) {
-    SharedDrawerState navState = SharedDrawer.of(context);
-    return new Scaffold(
-        appBar: AppBar(
-          title: Text(navState.selectedItem?.title ?? "",
-              style: res.textStyleTitleDark),
-          leading: IconButton(
-            icon: Icon(
-                navState.shouldGoBack ? res.backIcon(context) : Icons.menu),
-            onPressed: () {
-              if (navState.shouldGoBack) {
-                navState.navigator.currentState.pop();
-              } else {
-                RootScaffold.openDrawer(context);
-              }
-            },
-          ),
-          actions: <Widget>[
-            // action button
-            IconButton(
-              icon: Icon(Icons.refresh),
-              onPressed: () {
-                setState(() {
-                  _reveleadPercent = 0.0;
-                });
-              },
-            )
-          ],
-        ),
-        body: Center(
-            child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: <Widget>[
-              /* ClipRRect(
-                  borderRadius: BorderRadius.all(Radius.circular(10.0)),
-                  child:*/
-              Container(
-//                decoration: BoxDecoration(
-//                    border: Border.all(color: Colors.indigo, width: 2.0)),
-                width: 300.0,
-                height: 300.0,
-                alignment: Alignment.center,
-                child: Stack(
-                  children: <Widget>[
-                    new ScratchCardWidget(
-                        coverKey: _keyCover,
-                        cover:
-                            /*RepaintBoundary(
-                            key: _keyCover,
-                            child: */
-                            /*  FittedBox(
-                                fit: BoxFit.cover,
-                                child:*/
-//                            Opacity(opacity: 0.0),
-                            Image.asset('images/itt_kapard_new.png'),
-                        reveal: DecoratedBox(
-                          decoration: const BoxDecoration(color: Colors.indigo),
-                          child: Center(
-                              child: Text(
-                            'Congratulations! You WON!',
-                            style: res.textStyleTitleDark,
-                          )),
-                        ),
-                        strokeWidth: 15.0,
-                        finishPercent: 0,
-                        onComplete: () => print('The card is now clear!'),
-                        onScratch: (percent) {
-                          setState(() {
-                            print(sprintf("onScratch: %.5f", [percent]));
-                            _reveleadPercent = percent;
-                          });
-                        }),
-                  ],
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(vertical: 8.0),
-                child: Text(
-                    "${sprintf("Scratched: %.5f%%", [_reveleadPercent * 100])}",
-                    style: res.textStyleNormal),
-              ),
-            ])));
-  }
-}
+import 'package:flutter_carousel/scratch_demo/scratch_card_view_model.dart';
 
 typedef ScratchPercentCallback = void Function(double percent);
 
 class ScratchCardWidget extends StatefulWidget {
   ScratchCardWidget(
       {Key key,
-      @required this.coverKey,
       @required this.cover,
       this.reveal,
       this.strokeWidth = 25.0,
@@ -132,33 +27,25 @@ class ScratchCardWidget extends StatefulWidget {
   final int finishPercent;
   final VoidCallback onComplete;
   final ScratchPercentCallback onScratch;
-  final GlobalKey coverKey;
 
   @override
-  ScratchCardWidgetState createState() =>
-      new ScratchCardWidgetState(coverKey: coverKey);
+  ScratchCardWidgetState createState() => new ScratchCardWidgetState();
 }
 
 class ScratchCardWidgetState extends State<ScratchCardWidget> {
-  ScratchCardWidgetState({@required this.coverKey});
+  ScratchCardWidgetState();
 
   ScratchData _data = ScratchData();
 
   GlobalKey _cardLayoutKey = GlobalKey();
-  final GlobalKey coverKey;
 
   /// The last local point in local coordinates at which the
   /// pointer contacted the screen.
   Offset _lastPoint;
 
-  double _revealedPercent = 0.0;
-
-  double get revealedPercent => _revealedPercent;
-
-  bool _insideCapture = false;
-  Uint8List _imageInMemory;
-
   StreamSubscription _timerSub;
+
+  ScratchCardBindingWidgetState _bindingState;
 
   void reset() {
     setState(() {
@@ -234,8 +121,8 @@ class ScratchCardWidgetState extends State<ScratchCardWidget> {
     if (_timerSub != null) _timerSub.cancel();
     _timerSub = new Stream.periodic(const Duration(milliseconds: 500), (v) => v)
 //          .take(10)
-        .listen((count) {
-      print("Timer tick $count");
+        .listen((tick) {
+      print("Timer tick $tick");
       /*if (!_insideCapture) */
       _capturePixels();
     });
@@ -252,30 +139,32 @@ class ScratchCardWidgetState extends State<ScratchCardWidget> {
   @override
   void dispose() {
     _stopTimer();
+    super.dispose();
   }
 
   Future<Uint8List> _capturePixels() async {
     try {
-      print('captureImage inside: $coverKey, $_insideCapture');
-      if (_insideCapture) return _imageInMemory;
+      print('captureImage inside: $_bindingState');
+      if (_bindingState.captureInProgress) return _bindingState.capturedImage;
 
       RenderRepaintBoundary boundary =
           _cardLayoutKey.currentContext.findRenderObject();
       if (boundary.debugNeedsPaint) return null;
-      setState(() => _insideCapture = true);
-      ui.Image image = await boundary.toImage(pixelRatio: 3.0);
+      _bindingState.captureInProgress = true;
+      ui.Image image = await boundary.toImage(pixelRatio: 1.0);
       ByteData byteData =
           await image.toByteData(format: ui.ImageByteFormat.png);
       Uint8List pngBytes = byteData.buffer.asUint8List();
 //      String bs64 = base64Encode(pngBytes);_to
       print(pngBytes);
 //      print(bs64);
-      print('png done');
-      setState(() {
-        _imageInMemory = pngBytes;
-        _insideCapture = false;
-        widget.onScratch(_transparentPixelPercent(_imageInMemory));
-      });
+      print('_capturePixels done');
+      //setState(() {
+      //_imageInMemory = pngBytes;
+      _bindingState.capturedImage = pngBytes;
+      widget.onScratch(_bindingState.revealPercent);
+      _bindingState.captureInProgress = false;
+      //});
       return pngBytes;
     } catch (e) {
       print(e);
@@ -283,21 +172,10 @@ class ScratchCardWidgetState extends State<ScratchCardWidget> {
     return null;
   }
 
-  double _transparentPixelPercent(Uint8List imageInMemory) {
-    int count = 0;
-    /*_imageInMemory.fold(0, (value, pixel) {
-      if (pixel == 0) value++;
-    });*/
-    imageInMemory.forEach((pixel) {
-      if (pixel == 0) count++;
-    });
-//    print(sprintf("_transparentPixelPercent count/lenght: %d/%d, percent: %.5f",
-//        [count, _imageInMemory.length, count / _imageInMemory.length]));
-    return count.toDouble() / imageInMemory.length.toDouble();
-  }
-
   @override
   Widget build(BuildContext context) {
+    //_capturePixels();
+    _bindingState = ScratchCardBindingWidget.of(context);
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onPanDown: _onPanDown,
@@ -307,15 +185,6 @@ class ScratchCardWidgetState extends State<ScratchCardWidget> {
         fit: StackFit.expand,
         children: <Widget>[
           widget.reveal,
-          /* _insideCapture
-              ? CircularProgressIndicator()
-              : _imageInMemory != null
-                  ? Container(
-                      decoration: BoxDecoration(
-                          border: Border.all(color: Col9ors.pink, width: 2.0)),
-                      child: Image.memory(_imageInMemory, scale: 0.2),
-                      margin: EdgeInsets.all(10))
-                  : Container(),*/
           ScratchCardLayout(
             key: _cardLayoutKey,
             strokeWidth: widget.strokeWidth,
@@ -325,22 +194,6 @@ class ScratchCardWidgetState extends State<ScratchCardWidget> {
         ],
       ),
     );
-  }
-}
-
-class ScratchData extends ChangeNotifier {
-  List<Offset> _points = [];
-
-  List<Offset> get points => _points;
-
-  void addPoint(Offset offset) {
-    _points.add(offset);
-    notifyListeners();
-  }
-
-  void clear() {
-    _points.clear();
-    notifyListeners();
   }
 }
 
@@ -403,6 +256,7 @@ class _ScratchCardRender extends RenderRepaintBoundary {
     if (_data == data) {
       return;
     }
+    print("_data.length ${_data.points.length}");
     if (attached) {
       _data.removeListener(markNeedsPaint);
       data.addListener(markNeedsPaint);
@@ -428,9 +282,10 @@ class _ScratchCardRender extends RenderRepaintBoundary {
     if (child != null) {
       context.canvas.saveLayer(offset & size, Paint());
       context.paintChild(child, offset);
-      Paint clear = Paint()..blendMode = BlendMode.clear;
+      Paint fill = Paint()
+        ..blendMode = _data.points.isEmpty ? BlendMode.src : BlendMode.clear;
       _data.points.forEach((point) =>
-          context.canvas.drawCircle(offset + point, _strokeWidth, clear));
+          context.canvas.drawCircle(offset + point, _strokeWidth, fill));
       context.canvas.restore();
     }
   }

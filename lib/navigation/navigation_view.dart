@@ -3,7 +3,7 @@ import 'package:flutter_carousel/carousel_widget/carousel_widget_view.dart';
 import 'package:flutter_carousel/home_page/home_page_view.dart';
 import 'package:flutter_carousel/navigation/navigation_view_model.dart';
 import 'package:flutter_carousel/resources.dart' as res;
-import 'package:flutter_carousel/scratch_demo/scratch_card_view.dart';
+import 'package:flutter_carousel/scratch_demo/scratch_demo_view.dart';
 import 'package:flutter_carousel/shopping_cart/shopping_cart_view.dart';
 import 'package:flutter_carousel/widget_demo/widget_demo_view.dart';
 

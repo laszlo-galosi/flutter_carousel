@@ -46,7 +46,7 @@ class MainMenuWidget extends StatelessWidget {
                         state.setShouldGoBack(true);
                         state.navigator?.currentState
                             ?.pushNamed(item.routeName);
-                        drawerControllerState.close();
+                        drawerControllerState?.close();
                       }
                     }),
                 Text(item.description ?? "",
