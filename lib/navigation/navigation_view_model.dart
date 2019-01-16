@@ -14,15 +14,17 @@ final List<NavigationItem> navigationMenuItems = [
         controller.close();
       }),
   new NavigationItem(
-      title: "Widget Demo",
-      routeName: "/widget_demo",
-      icon: Icon(Icons.widgets),
-      description:
-          "Material and Cupertino Widget demo to showcase differences of the platforms.",
+      title: "Scratch Demo",
+      routeName: "/scratch",
+      icon: new Image.asset(
+        'images/ic_scratch.png',
+        width: 24.0,
+        color: Colors.black38,
+      ),
+      description: "Scratch view demo.",
       navigationCallback: (drawerState, controller) {
         drawerState.setShouldGoBack(false);
-        drawerState.navigator?.currentState
-            ?.pushReplacementNamed("/widget_demo");
+        drawerState.navigator?.currentState?.pushReplacementNamed("/scratch");
         controller.close();
       }),
   new NavigationItem(
@@ -47,19 +49,17 @@ final List<NavigationItem> navigationMenuItems = [
         controller.close();
       }),
   new NavigationItem(
-      title: "Scratch Demo",
-      routeName: "/scratch",
-      icon: new Image.asset(
-        'images/ic_scratch.png',
-        width: 24.0,
-        height: 24.0,
-      ),
-      description: "Scratch view demo.",
+      title: "Widget Demo",
+      routeName: "/widget_demo",
+      icon: Icon(Icons.widgets),
+      description:
+          "Material and Cupertino Widget demo to showcase differences of the platforms.",
       navigationCallback: (drawerState, controller) {
         drawerState.setShouldGoBack(false);
-        drawerState.navigator?.currentState?.pushReplacementNamed("/scratch");
+        drawerState.navigator?.currentState
+            ?.pushReplacementNamed("/widget_demo");
         controller.close();
-      })
+      }),
 ];
 
 class NavigationItem {

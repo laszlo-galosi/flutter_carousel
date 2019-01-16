@@ -17,6 +17,7 @@ class ScratchCardWidget extends StatefulWidget {
       this.reveal,
       this.strokeWidth = 25.0,
       this.finishPercent = 0,
+      this.completeThreshold = 0.99,
       this.onComplete,
       this.onScratch})
       : super(key: key);
@@ -26,6 +27,7 @@ class ScratchCardWidget extends StatefulWidget {
   final double strokeWidth;
   final int finishPercent;
   final VoidCallback onComplete;
+  final double completeThreshold;
   final ScratchPercentCallback onScratch;
 
   @override
@@ -113,12 +115,15 @@ class ScratchCardWidgetState extends State<ScratchCardWidget> {
   /// is no longer in contact with the screen and was moving at a specific
   /// velocity when it stopped contacting the screen.
   void _onPanEnd(DragEndDetails details) {
-    _capturePixels();
+    if (_bindingState.revealPercent <= widget.completeThreshold) {
+      _capturePixels();
+    }
     _stopTimer();
   }
 
   void _startTimer() {
     if (_timerSub != null) _timerSub.cancel();
+    if (_bindingState.revealPercent > widget.completeThreshold) return;
     _timerSub = new Stream.periodic(const Duration(milliseconds: 500), (v) => v)
 //          .take(10)
         .listen((tick) {
@@ -163,6 +168,12 @@ class ScratchCardWidgetState extends State<ScratchCardWidget> {
       //_imageInMemory = pngBytes;
       _bindingState.capturedImage = pngBytes;
       widget.onScratch(_bindingState.revealPercent);
+      final completed =
+          (_bindingState.revealPercent > widget.completeThreshold);
+      _bindingState.completed = completed;
+      if (completed) {
+        widget.onComplete();
+      }
       _bindingState.captureInProgress = false;
       //});
       return pngBytes;
@@ -174,7 +185,6 @@ class ScratchCardWidgetState extends State<ScratchCardWidget> {
 
   @override
   Widget build(BuildContext context) {
-    //_capturePixels();
     _bindingState = ScratchCardBindingWidget.of(context);
     return GestureDetector(
       behavior: HitTestBehavior.opaque,

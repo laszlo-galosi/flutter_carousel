@@ -64,6 +64,9 @@ class ScratchDemoView extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: <Widget>[
+          state.isCompleted
+              ? Text("The card is now clear!", style: res.textStyleNormal)
+              : Container(),
           ClipRRect(
               borderRadius: BorderRadius.all(Radius.circular(14.0)),
               child: Container(
@@ -88,9 +91,13 @@ class ScratchDemoView extends StatelessWidget {
                         ),
                         strokeWidth: 15.0,
                         finishPercent: 0,
-                        onComplete: () => print('The card is now clear!'),
+                        completeThreshold: 0.99,
+                        onComplete: () {
+                          print('The card is now clear!');
+                        },
                         onScratch: (percent) {
-                          print(sprintf("onScratch: %.5f", [percent]));
+                          print(sprintf("onScratch: %.5f, completed: %s",
+                              [percent, state.isCompleted]));
                         }),
                   ],
                 ),

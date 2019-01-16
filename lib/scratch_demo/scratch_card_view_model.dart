@@ -1,4 +1,3 @@
-
 import 'dart:typed_data';
 
 import 'package:flutter/cupertino.dart';
@@ -30,16 +29,17 @@ class ScratchCardBindingWidget extends StatefulWidget {
   final Widget child;
 
   @override
-  ScratchCardBindingWidgetState createState() => new ScratchCardBindingWidgetState();
+  ScratchCardBindingWidgetState createState() =>
+      new ScratchCardBindingWidgetState();
 
   static ScratchCardBindingWidgetState of(
       [BuildContext context, bool rebuild = true]) {
     return (rebuild
-        ? context.inheritFromWidgetOfExactType(
-        _ScratchCardModelBindingWidget)
-    as _ScratchCardModelBindingWidget
-        : context.ancestorWidgetOfExactType(_ScratchCardModelBindingWidget)
-    as _ScratchCardModelBindingWidget)
+            ? context.inheritFromWidgetOfExactType(
+                    _ScratchCardModelBindingWidget)
+                as _ScratchCardModelBindingWidget
+            : context.ancestorWidgetOfExactType(_ScratchCardModelBindingWidget)
+                as _ScratchCardModelBindingWidget)
         .data;
   }
 }
@@ -72,14 +72,14 @@ class ScratchCardBindingWidgetState extends State<ScratchCardBindingWidget> {
       _capturedImage = imagePixels;
       int count = _countScratchedPixels();
       _revealedPercent = count / _initialPixelSize;
-      print(sprintf("_transparentPixelPercent count/lenght: %d/%d, percent: %.5f",
+      print(sprintf(
+          "_transparentPixelPercent count/lenght: %d/%d, percent: %.5f",
           [count, _initialPixelSize, _revealedPercent]));
     });
   }
 
   bool _debugMode = false;
   bool get debugMode => _debugMode;
-
 
   set debugMode(bool mode) {
     setState(() {
@@ -91,6 +91,16 @@ class ScratchCardBindingWidgetState extends State<ScratchCardBindingWidget> {
 
   bool get captureInProgress => _captureInProgress;
 
+  bool _completed = false;
+
+  bool get isCompleted => _completed;
+
+  set completed(bool value) {
+    setState(() {
+      _completed = value;
+    });
+  }
+
   set captureInProgress(bool mode) {
     setState(() {
       _captureInProgress = mode;
@@ -100,12 +110,11 @@ class ScratchCardBindingWidgetState extends State<ScratchCardBindingWidget> {
   int _countScratchedPixels() {
     if (_capturedImage == null) return 0;
     int count = _initialPixelSize;
-     _capturedImage.forEach((pixel) {
+    _capturedImage.forEach((pixel) {
       if (pixel > 0) count--;
     });
     return count;
   }
-
 
   @override
   Widget build(BuildContext context) {
