@@ -5,14 +5,13 @@ import 'package:flutter_carousel/navigation/navigation_view_model.dart';
 import 'package:flutter_carousel/resources.dart' as res;
 import 'package:flutter_carousel/scratch_demo/scratch_card_view_model.dart';
 import 'package:flutter_carousel/scratch_demo/scratch_card_widget.dart';
+import 'package:scoped_model/scoped_model.dart';
 import 'package:sprintf/sprintf.dart';
 
 class ScratchDemoPageWidget extends StatefulWidget {
-  ScratchDemoPageWidget();
+  ScratchDemoPageWidget({Key key, @required this.viewModel});
 
-  factory ScratchDemoPageWidget.forDesignTime() {
-    return new ScratchDemoPageWidget();
-  }
+  ScratchCardViewModel viewModel;
 
   @override
   _ScratchDemoPageWidgetState createState() =>
@@ -20,10 +19,13 @@ class ScratchDemoPageWidget extends StatefulWidget {
 }
 
 class _ScratchDemoPageWidgetState extends State<ScratchDemoPageWidget> {
+  _ScratchDemoPageWidgetState({Key key});
+
   @override
   Widget build(BuildContext context) {
     SharedDrawerState navState = SharedDrawer.of(context);
-    return ScratchCardBindingWidget(
+    return ScopedModel(
+        model: widget.viewModel,
         child: new Scaffold(
             appBar: AppBar(
               title: Text(navState.selectedItem?.title ?? "",
@@ -44,9 +46,7 @@ class _ScratchDemoPageWidgetState extends State<ScratchDemoPageWidget> {
                 IconButton(
                   icon: Icon(Icons.refresh),
                   onPressed: () {
-                    ScratchCardBindingWidgetState state =
-                        ScratchCardBindingWidget.of(context, false);
-                    state.revealPercent = 0.0;
+                    widget.viewModel.setDefaultState(true);
                   },
                 )
               ],
@@ -58,92 +58,98 @@ class _ScratchDemoPageWidgetState extends State<ScratchDemoPageWidget> {
 class ScratchDemoView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    ScratchCardBindingWidgetState state = ScratchCardBindingWidget.of(context);
-    return Center(
-        child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: <Widget>[
-          state.isCompleted
-              ? Text("The card is now clear!", style: res.textStyleNormal)
-              : Container(),
-          ClipRRect(
-              borderRadius: BorderRadius.all(Radius.circular(14.0)),
-              child: Container(
-                decoration: BoxDecoration(
-                    border: Border.all(color: Colors.indigo, width: 2.0)),
-                width: 250.0,
-                height: 250.0,
-                alignment: Alignment.center,
-                child: Stack(
-                  children: <Widget>[
-                    new ScratchCardWidget(
-                        cover: FittedBox(
-                            fit: BoxFit.cover,
-                            child: Image.asset('images/itt_kapard_new.png')),
-                        reveal: DecoratedBox(
-                          decoration: const BoxDecoration(color: Colors.indigo),
-                          child: Center(
-                              child: Text(
-                            'Congratulations! You WON!',
-                            style: res.textStyleNormalDark,
-                          )),
-                        ),
-                        strokeWidth: 15.0,
-                        finishPercent: 0,
-                        completeThreshold: 0.99,
-                        onComplete: () {
-                          print('The card is now clear!');
-                        },
-                        onScratch: (percent) {
-                          print(sprintf("onScratch: %.5f, completed: %s",
-                              [percent, state.isCompleted]));
-                        }),
-                  ],
-                ),
-              )),
-          Text("${sprintf("Scratched: %.5f%%", [state.revealPercent * 100])}",
-              style: res.textStyleNormal),
-          Container(
-              padding: const EdgeInsets.symmetric(vertical: 8.0),
-              child:
-                  Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                Switch.adaptive(
-                    value: state.debugMode,
-                    onChanged: (value) => state.debugMode = value),
-                Text("Show snapshot", style: res.textStyleNormal),
-              ])),
-          new ScratchDebugView()
-        ]));
+    return new ScopedModelDescendant<ScratchCardViewModel>(
+        builder: (context, child, model) {
+      return Center(
+          child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: <Widget>[
+            model.isCompleted
+                ? Text("The card is now clear!", style: res.textStyleNormal)
+                : Container(),
+            ClipRRect(
+                borderRadius: BorderRadius.all(Radius.circular(14.0)),
+                child: Container(
+                  decoration: BoxDecoration(
+                      border: Border.all(color: Colors.indigo, width: 2.0)),
+                  width: 250.0,
+                  height: 250.0,
+                  alignment: Alignment.center,
+                  child: Stack(
+                    children: <Widget>[
+                      new ScratchCardWidget(
+                          cover: FittedBox(
+                              fit: BoxFit.cover,
+                              child: Image.asset('images/itt_kapard_new.png')),
+                          reveal: DecoratedBox(
+                            decoration:
+                                const BoxDecoration(color: Colors.indigo),
+                            child: Center(
+                                child: Text(
+                              'Congratulations! You WON!',
+                              style: res.textStyleNormalDark,
+                            )),
+                          ),
+                          strokeWidth: 15.0,
+                          completeThreshold: 0.99,
+                          onComplete: () {
+                            print('The card is now clear!');
+                          },
+                          onScratch: (percent) {
+                            print(sprintf("onScratch: %.5f, completed: %s",
+                                [percent, model.isCompleted]));
+                          }),
+                    ],
+                  ),
+                )),
+            Text(
+                "${sprintf("Scratched: %.5f%%", [
+                  model.revealedPercent * 100
+                ])}",
+                style: res.textStyleNormal),
+            Container(
+                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                child:
+                    Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                  Switch.adaptive(
+                      value: model.debugMode,
+                      onChanged: (value) => model.debugMode = value),
+                  Text("Show snapshot", style: res.textStyleNormal),
+                ])),
+            new ScratchDebugView()
+          ]));
+    });
   }
 }
 
 class ScratchDebugView extends StatelessWidget {
-  @override
   Widget build(BuildContext context) {
-    ScratchCardBindingWidgetState state = ScratchCardBindingWidget.of(context);
-    if (!state.debugMode) return Container();
-    if (state.capturedImage != null) {
-      return Container(
-        width: 150,
-        height: 150,
-        decoration: BoxDecoration(
-            /* color: Colors.pink,*/
-            border: Border.all(color: Colors.pink, width: 2.0)),
-        child: Stack(fit: StackFit.loose, children: <Widget>[
-          Image.memory(state.capturedImage),
-          //state.captureInProgress ? CircularProgressIndicator() : Container()
-          state.captureInProgress
-              ? Center(
-                  child: CircularProgressIndicator(
-                  strokeWidth: 6,
-                  backgroundColor: Colors.pink,
-                ))
-              : Container()
-        ]),
-        //margin: EdgeInsets.all(10)
-      );
-    }
-    return Container();
+    return new ScopedModelDescendant<ScratchCardViewModel>(
+        builder: (context, child, model) {
+      if (!model.debugMode) return Container();
+      if (model.capturedImage != null) {
+        return Container(
+          width: 150,
+          height: 150,
+          decoration: BoxDecoration(
+              /* color: Colors.pink,*/
+              border: Border.all(color: Colors.pink, width: 2.0)),
+          child: Stack(fit: StackFit.loose, children: <Widget>[
+            Image.memory(model.capturedImage),
+            //state.captureInProgress ? CircularProgressIndicator() : Container()
+            model.captureInProgress
+                ? Center(
+                    child: CircularProgressIndicator(
+                    strokeWidth: 6,
+                    backgroundColor: Colors.pink,
+                  ))
+                : Container()
+          ]),
+          //margin: EdgeInsets.all(10)
+        );
+      }
+      return Container();
+    });
   }
 }

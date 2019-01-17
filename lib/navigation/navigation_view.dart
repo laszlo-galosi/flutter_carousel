@@ -5,6 +5,7 @@ import 'package:flutter_carousel/infinite_list/infinite_list_demo_view_model.dar
 import 'package:flutter_carousel/infinite_list/infinite_list_view.dart';
 import 'package:flutter_carousel/navigation/navigation_view_model.dart';
 import 'package:flutter_carousel/resources.dart' as res;
+import 'package:flutter_carousel/scratch_demo/scratch_card_view_model.dart';
 import 'package:flutter_carousel/scratch_demo/scratch_demo_view.dart';
 import 'package:flutter_carousel/services/napisorsjegy_api.dart';
 import 'package:flutter_carousel/shopping_cart/shopping_cart_view.dart';
@@ -86,7 +87,9 @@ Widget getPageForRouteName(String routeName) {
     case '/widget_demo':
       return new WidgetDemoPageWidget();
     case "/scratch":
-      return new ScratchDemoPageWidget();
+      return new ScratchDemoPageWidget(
+        viewModel: new ScratchCardViewModel(),
+      );
     case "/infinite_list":
       return new InfiniteListDemoPageWidget(
           viewModel: InfiniteListDemoViewModel(api: NapisorsjegyApiService()));
