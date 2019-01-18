@@ -5,32 +5,37 @@ import 'package:flutter/material.dart';
 import 'package:flutter_carousel/globals.dart';
 import 'package:flutter_carousel/navigation/navigation_view_model.dart';
 import 'package:flutter_carousel/resources.dart' as res;
+import 'package:flutter_carousel/widget_demo/widget_pickers_cupertino.dart';
+import 'package:flutter_carousel/widget_demo/widget_pickers_material.dart';
+import 'package:intl/intl.dart';
+import 'package:scoped_model/scoped_model.dart';
 
 class WidgetDef extends StatelessWidget {
-  WidgetDef({this.child, this.label, this.builder, this.isAndroid});
+  WidgetDef({this.child, this.label, this.builder});
 
   final String label;
   final Widget child;
   final WidgetBuilder builder;
-  final bool isAndroid;
 
   Widget build(BuildContext context) {
-    if (builder != null) {
-      assert(isAndroid != null,
-          "WidgetDef Error: AdaptiveBuilder specified, but isAndroid not set");
-      return builder(context);
-    }
-    assert(child != null,
-        "WidgetDef Error: Either sepecify an AdaptiveBuilder or the child.");
-
-    return Column(children: <Widget>[
-      new Container(
-          width: double.infinity,
-          padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
-          child: new Text(label ?? child.runtimeType.toString(),
-              style: res.textStyleLabel)),
-      child
-    ]);
+    return new ScopedModelDescendant<WidgetDemoTabViewModel>(
+        builder: (context, _, model) {
+      if (builder != null) {
+        assert(model.isAndroid != null,
+            "WidgetDef Error: AdaptiveBuilder specified, but isAndroid not set");
+        return builder(context);
+      }
+      assert(child != null,
+          "WidgetDef Error: Either sepecify an AdaptiveBuilder or the child.");
+      return new Column(children: <Widget>[
+        new Container(
+            width: double.infinity,
+            padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
+            child: new Text(label ?? child.runtimeType.toString(),
+                style: res.textStyleLabel)),
+        child
+      ]);
+    });
   }
 }
 
@@ -69,169 +74,220 @@ class _WidgetDemoPageWidgetState extends State<WidgetDemoPageWidget> {
                 ),
                 bottom: TabBar(
                   tabs: [
-                    Tab(text: "Android"),
-                    Tab(text: "iOS"),
+                    Tab(text: "Material"),
+                    Tab(text: "Cupertino"),
                     Tab(text: "Adaptive"),
                   ],
                 )),
             body: TabBarView(
               children: [
                 new WidgetDemoTabPageWidget(
-                  isAndroid: true,
+                  viewModel: new WidgetDemoTabViewModel(isAndroid: true),
                 ),
                 new WidgetDemoTabPageWidget(
-                  isAndroid: false,
+                  viewModel: new WidgetDemoTabViewModel(isAndroid: false),
                 ),
                 new WidgetDemoTabPageWidget(
-                    isAdaptive: true, isAndroid: !Platform.isIOS),
+                    viewModel: new WidgetDemoTabViewModel(
+                        isAdaptive: true, isAndroid: !Platform.isIOS)),
               ],
             )));
   }
 }
 
-class WidgetDemoTabPageWidget extends StatefulWidget {
-  WidgetDemoTabPageWidget(
-      {Key key, this.isAndroid = true, this.isAdaptive = false});
+class WidgetDemoTabViewModel extends Model {
+  WidgetDemoTabViewModel({
+    this.isAndroid = true,
+    this.isAdaptive = false,
+  });
 
   final bool isAndroid;
   final bool isAdaptive;
 
+  bool _switchValue = false;
+
+  bool get switchValue => _switchValue;
+
+  set switchValue(bool value) {
+    _switchValue = value;
+    notifyListeners();
+  }
+
+  bool _checkBoxValue = false;
+
+  bool get checkBoxValue => _checkBoxValue;
+
+  set checkBoxValue(bool value) {
+    _checkBoxValue = value;
+    notifyListeners();
+  }
+
+  DateTime _dateTime = DateTime.now();
+
+  DateTime get dateTime => _dateTime;
+
+  set dateTime(DateTime dateTime) {
+    _dateTime = dateTime;
+    notifyListeners();
+  }
+}
+
+class WidgetDemoTabPageWidget extends StatefulWidget {
+  WidgetDemoTabPageWidget({Key key, @required this.viewModel});
+
+  final WidgetDemoTabViewModel viewModel;
+
   @override
-  WidgetDemoTabPageState createState() =>
-      new WidgetDemoTabPageState(isAndroid, isAdaptive);
+  WidgetDemoTabPageState createState() => new WidgetDemoTabPageState();
 }
 
 class WidgetDemoTabPageState extends State<WidgetDemoTabPageWidget> {
-  WidgetDemoTabPageState(this.isAndroid, this.isAdaptive);
-
-  final bool isAndroid;
-  final bool isAdaptive;
-  bool _switchValue = false;
-  bool _checkBoxValue = false;
+  WidgetDemoTabPageState({Key key});
 
   @override
   Widget build(BuildContext context) {
-    return new ListView.builder(
-        itemCount: _widgetDefs(isAndroid, isAdaptive, this).length,
-        itemBuilder: (BuildContext ctx, int index) {
-          final widgetDef = _widgetDefs(isAndroid, isAdaptive, this)[index];
-          return new DemoWidgetItem(child: widgetDef);
-        });
+    return ScopedModel<WidgetDemoTabViewModel>(
+        model: widget.viewModel,
+        child: new ListView.builder(
+            itemCount: _widgetDefs(context).length,
+            itemBuilder: (BuildContext ctx, int index) {
+              final widgetDef = _widgetDefs(context)[index];
+              return new DemoWidgetItem(child: widgetDef);
+            }));
   }
 
-  List<WidgetDef> _widgetDefs(
-      bool isAndroid, bool isAdaptive, WidgetDemoTabPageState state) {
-    Map<String, Widget> widgetMap;
-    if (isAdaptive)
-      widgetMap = _adaptiveWidgets(state);
-    else
-      widgetMap = (isAndroid ? _androidWidgets(state) : _iosWidgets(state));
+  List<WidgetDef> _widgetDefs(BuildContext context) {
+    Map<String, Widget> widgetMap = getWidgetMap(context);
     return [
-      new WidgetDef(
-          isAndroid: isAndroid,
-          builder: (context) {
-            String label = "${widgetMap['Button'] == null ? "No ${isAdaptive ? 'adaptive' : ''} Button" : "${isAndroid ? "MaterialButton" : "CupertinoButton"}"}";
-            return Column(children: <Widget>[
-              new Container(
-                  width: double.infinity,
-                  padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
-                  child: new Text(
-                      label,
-                      style: res.textStyleLabel)),
-              matchParent(widgetMap["Button"]),
-            ]);
-          }),
-      new WidgetDef(
-          isAndroid: isAndroid,
-          builder: (context) {
-            return Column(children: <Widget>[
-              new Container(
-                  width: double.infinity,
-                  padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
-                  child: new Text(isAndroid ? "Switch ${isAdaptive? "(adaptive)" : ""}" : "CupertinoSwitch",
-                      style: res.textStyleLabel)),
-              Row(children: <Widget>[
-                widgetMap["Switch"],
-                Text(
-                    "This is a ${isAndroid ? "Switch" : "CupertionSwitch"} swithed ${state._switchValue ? "on" : "off"}")
-              ])
-            ]);
-          }),
-      new WidgetDef(
-          isAndroid: isAndroid,
-          builder: (context) {
-            String label = "${widgetMap['Checkbox'] == null ? "No ${isAdaptive ? 'adaptive' : ''} Checkbox" : "Checkbox"}";
-            return Column(children: <Widget>[
-              new Container(
-                  width: double.infinity,
-                  padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
-                  child: new Text(label, style: res.textStyleLabel)),
-              Row(children: <Widget>[
-                widgetMap["Checkbox"] ?? new Container(),
-                (widgetMap["Checkbox"] != null ?Text(
-                    "This is a Checkbox ${state._checkBoxValue ? "checked" : "unchecked"}")
-                    : new Container())
-              ])
-            ]);
-          }),
+      _buildWidgetDef("DatePicker", context,
+          label: "${widgetMap["DatePicker"].runtimeType}",
+          children: [widgetMap["DatePicker"]]),
+      _buildWidgetDef("DateTimePicker", context,
+          label: "${widgetMap["DateTimePicker"].runtimeType}",
+          children: [widgetMap["DateTimePicker"]]),
+      new WidgetDef(builder: (context) {
+        String label =
+            "${widgetMap['Button'] == null ? "No ${widget.viewModel.isAdaptive ? 'adaptive' : ''} Button" : "${widget.viewModel.isAndroid ? "MaterialButton" : "CupertinoButton"}"}";
+        return Column(children: <Widget>[
+          new Container(
+              width: double.infinity,
+              padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
+              child: new Text(label, style: res.textStyleLabel)),
+          matchParent(widgetMap["Button"]),
+        ]);
+      }),
+      _buildWidgetDef("Switch", context,
+          label: widget.viewModel.isAndroid ? "Switch" : "CupertinoSwitch",
+          children: <Widget>[
+            widgetMap["Switch"],
+            Text(
+                "This is a ${widget.viewModel.isAndroid ? "Switch" : "CupertionSwitch"} swithed ${widget.viewModel.switchValue ? "on" : "off"}")
+          ]),
+      _buildWidgetDef("Checkbox", context,
+          label: "Checkbox",
+          children: <Widget>[
+            widgetMap["Checkbox"] ?? new Container(),
+            (widgetMap["Checkbox"] != null
+                ? Text(
+                    "This is a Checkbox ${widget.viewModel.checkBoxValue ? "checked" : "unchecked"}")
+                : new Container())
+          ]),
     ];
   }
 
-  Map<String, Widget> _androidWidgets(WidgetDemoTabPageState state) => {
+  WidgetDef _buildWidgetDef(String key, BuildContext context,
+      {String label, @required List<Widget> children}) {
+    Map<String, Widget> widgetMap = getWidgetMap(context);
+    return new WidgetDef(builder: (context) {
+      String labelText =
+          "${widgetMap[key] == null ? "No ${widget.viewModel.isAdaptive ? 'adaptive' : ''} $key" : label}";
+      return Column(children: <Widget>[
+        new Container(
+            width: double.infinity,
+            padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
+            child: new Text(labelText, style: res.textStyleLabel)),
+        children.length > 1
+            ? Row(children: children)
+            : Container(child: children[0]),
+      ]);
+    });
+  }
+
+  Map<String, Widget> getWidgetMap(BuildContext context) {
+    Map<String, Widget> widgetMap = widget.viewModel.isAdaptive
+        ? _adaptiveWidgets()
+        : (widget.viewModel.isAndroid
+            ? _materialWidgets(context)
+            : _cupertinoWidgets());
+    return widgetMap;
+  }
+
+  Map<String, Widget> _materialWidgets(BuildContext context) => {
         "Button": new MaterialButton(
             color: Colors.indigoAccent,
             child: Text("Button", style: res.textStyleNormalDark),
             onPressed: () {}),
         "Switch": new Switch(
-            value: state._switchValue,
+            value: widget.viewModel.switchValue,
             activeColor: Colors.indigoAccent,
-            onChanged: (bool value) {
-              state.setState(() {
-                state._switchValue = value;
-              });
-            }),
-         "Checkbox": new Checkbox(
-            value: state._checkBoxValue,
+            onChanged: (bool value) => widget.viewModel.switchValue = value),
+        "Checkbox": new Checkbox(
+            value: widget.viewModel.checkBoxValue,
             activeColor: Colors.indigoAccent,
-            onChanged: (bool value) {
-              state.setState(() {
-                state._checkBoxValue = value;
-              });
+            onChanged: (bool value) => widget.viewModel.checkBoxValue = value),
+        "DatePicker": new MaterialDateTimePicker(
+            label: "Date",
+            valueDate: widget.viewModel.dateTime,
+            formatter: (date) => DateFormat.yMMMMd().format(date),
+            onDateChanged: (date) => widget.viewModel.dateTime = date),
+        "DateTimePicker": new MaterialDateTimePicker(
+            label: "Date and Time",
+            valueDate: widget.viewModel.dateTime,
+            valueTime: TimeOfDay.fromDateTime(widget.viewModel.dateTime),
+            formatter: (value) {
+              if (value is DateTime) return DateFormat.yMMMd().format(value);
+              return value.format(context); //use default formatter.
+            },
+            onDateChanged: (date) => widget.viewModel.dateTime = date,
+            onTimeChanged: (time) {
+              final d = widget.viewModel._dateTime;
+              widget.viewModel.dateTime =
+                  new DateTime(d.year, d.month, d.day, time.hour, time.minute);
             }),
       };
 
-  Map<String, Widget> _iosWidgets(WidgetDemoTabPageState state) => {
+  Map<String, Widget> _cupertinoWidgets() => {
         "Button": new CupertinoButton(
             color: Colors.indigoAccent,
             child: Text("Button", style: res.textStyleNormalDark),
             onPressed: () {}),
         "Switch": new CupertinoSwitch(
-            value: state._switchValue,
+            value: widget.viewModel.switchValue,
             activeColor: Colors.indigoAccent,
-            onChanged: (bool value) {
-              state.setState(() {
-                state._switchValue = value;
-              });
-            }),
+            onChanged: (bool value) => widget.viewModel.switchValue = value),
         "Checkbox": new Checkbox(
-            value: state._checkBoxValue,
+            value: widget.viewModel.checkBoxValue,
             activeColor: Colors.indigoAccent,
-            onChanged: (bool value) {
-              state.setState(() {
-                state._checkBoxValue = value;
-              });
-            })
+            onChanged: (bool value) => widget.viewModel.checkBoxValue = value),
+        "DatePicker": CupertinoDateTimePicker(
+            mode: CupertinoDatePickerMode.date,
+            value: widget.viewModel.dateTime,
+            label: "Date",
+            formatter: (date) => DateFormat.yMMMMd().format(date),
+            onDateTimeChanged: (date) => widget.viewModel.dateTime = date),
+        "DateTimePicker": CupertinoDateTimePicker(
+            mode: CupertinoDatePickerMode.dateAndTime,
+            value: widget.viewModel.dateTime,
+            label: "Date and Time",
+            formatter: (date) => DateFormat.yMMMd().add_jm().format(date),
+            onDateTimeChanged: (date) => widget.viewModel.dateTime = date),
       };
 
-  Map<String, Widget> _adaptiveWidgets(WidgetDemoTabPageState state) => {
+  Map<String, Widget> _adaptiveWidgets() => {
         "Switch": new Switch.adaptive(
-            value: state._switchValue,
+            value: widget.viewModel.switchValue,
             activeColor: Colors.indigoAccent,
-            onChanged: (bool value) {
-              state.setState(() {
-                state._switchValue = value;
-              });
-            }),
+            onChanged: (bool value) => widget.viewModel.switchValue = value),
       };
 }
 
@@ -246,7 +302,7 @@ class DemoWidgetItem extends StatelessWidget {
     return Container(
       padding: EdgeInsets.all(16.0),
       width: double.infinity,
-      height: 120.0,
+      height: 140.0,
       decoration: new BoxDecoration(border: res.borderBottom1),
       child: child,
     );
