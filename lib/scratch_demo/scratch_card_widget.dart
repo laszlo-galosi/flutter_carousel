@@ -22,7 +22,8 @@ class ScratchCardWidget extends StatefulWidget {
       this.strokeWidth = 25.0,
       this.completeThreshold = 0.99,
       this.onComplete,
-      this.onScratch})
+      this.onScratch,
+      this.updateRevealedInterval = 500})
       : super(key: key);
 
   ///Th scratch able layer of the scratch card widget, which pixels are manipulated
@@ -39,6 +40,10 @@ class ScratchCardWidget extends StatefulWidget {
 
   /// Callback called when the [ScratchCardViewModel#revealedPercent] is changed.
   final ScratchPercentCallback onScratch;
+
+  /// Time interval in seconds to update [ScratchCardViewModel.revealedPercent]
+  /// default is 500 seconds.
+  final int updateRevealedInterval;
 
   /// Callback for subscribing to scratch completion, called when
   /// the [ScratchCardViewModel.revealedPercent] is > as [completeThreshold].
@@ -159,12 +164,13 @@ class ScratchCardWidgetState extends State<ScratchCardWidget> {
   void _startTimer() {
     if (_timerSub != null) _timerSub.cancel();
     if (_viewModel.revealedPercent > widget.completeThreshold) return;
-    _timerSub = new Stream.periodic(const Duration(milliseconds: 500), (v) => v)
+    _timerSub = new Stream.periodic(
+            Duration(milliseconds: widget.updateRevealedInterval), (v) => v)
         .listen((tick) {
 //      print("Timer tick $tick");
       _capturePixels();
     });
-    print("Timer started ${_timerSub.isPaused}");
+    print("Timer started.");
   }
 
   /// Stops the timer to stop periodic [_capturePixels]
@@ -185,7 +191,8 @@ class ScratchCardWidgetState extends State<ScratchCardWidget> {
   /// a in memory via by [RenderRepaintBoundary.toImage].
   Future<Uint8List> _capturePixels() async {
     try {
-      print('captureImage inside: $_viewModel');
+      print(
+          'captureImage inside: ${_viewModel.captureInProgress}, revealed ${_viewModel.revealedPercent}');
       // if capturing already started return the actual in memory image.
       if (_viewModel.captureInProgress) return _viewModel.capturedImage;
 

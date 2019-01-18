@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'dart:typed_data';
 
 import 'package:flutter/cupertino.dart';
@@ -39,7 +40,7 @@ class ScratchCardViewModel extends Model {
     }
     _capturedImage = imagePixels;
     int count = _countScratchedPixels();
-    _revealedPercent = count / _initialPixelSize;
+    _revealedPercent = math.max(0.0, count / _initialPixelSize);
     print(sprintf("_transparentPixelPercent count/lenght: %d/%d, percent: %.5f",
         [count, _initialPixelSize, _revealedPercent]));
     notifyListeners();

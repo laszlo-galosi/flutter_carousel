@@ -92,6 +92,7 @@ class ScratchDemoView extends StatelessWidget {
                             )),
                           ),
                           strokeWidth: 15.0,
+                          updateRevealedInterval: 500,
                           completeThreshold: 0.99,
                           onComplete: () {
                             print('The card is now clear!');
