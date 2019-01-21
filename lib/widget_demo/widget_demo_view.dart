@@ -81,15 +81,18 @@ class _WidgetDemoPageWidgetState extends State<WidgetDemoPageWidget> {
                 )),
             body: TabBarView(
               children: [
-                new WidgetDemoTabPageWidget(
-                  viewModel: new WidgetDemoTabViewModel(isAndroid: true),
+                new ScopedModel<WidgetDemoTabViewModel>(
+                  model: new WidgetDemoTabViewModel(isAndroid: true),
+                  child: new WidgetDemoTabPageWidget(),
                 ),
-                new WidgetDemoTabPageWidget(
-                  viewModel: new WidgetDemoTabViewModel(isAndroid: false),
+                new ScopedModel<WidgetDemoTabViewModel>(
+                  model: new WidgetDemoTabViewModel(isAndroid: false),
+                  child: new WidgetDemoTabPageWidget(),
                 ),
-                new WidgetDemoTabPageWidget(
-                    viewModel: new WidgetDemoTabViewModel(
-                        isAdaptive: true, isAndroid: !Platform.isIOS)),
+                new ScopedModel<WidgetDemoTabViewModel>(
+                    model: new WidgetDemoTabViewModel(
+                        isAdaptive: true, isAndroid: !Platform.isIOS),
+                    child: new WidgetDemoTabPageWidget()),
               ],
             )));
   }
@@ -130,30 +133,30 @@ class WidgetDemoTabViewModel extends Model {
     _dateTime = dateTime;
     notifyListeners();
   }
-}
-
-class WidgetDemoTabPageWidget extends StatefulWidget {
-  WidgetDemoTabPageWidget({Key key, @required this.viewModel});
-
-  final WidgetDemoTabViewModel viewModel;
 
   @override
-  WidgetDemoTabPageState createState() => new WidgetDemoTabPageState();
+  String toString() {
+    return 'WidgetDemoTabViewModel{isAndroid: $isAndroid, isAdaptive: $isAdaptive, _switchValue: $_switchValue, _checkBoxValue: $_checkBoxValue, _dateTime: $_dateTime}';
+  }
 }
 
-class WidgetDemoTabPageState extends State<WidgetDemoTabPageWidget> {
-  WidgetDemoTabPageState({Key key});
+class WidgetDemoTabPageWidget extends StatelessWidget {
+  WidgetDemoTabPageWidget({Key key});
+
+  WidgetDemoTabViewModel _viewModel;
 
   @override
   Widget build(BuildContext context) {
-    return ScopedModel<WidgetDemoTabViewModel>(
-        model: widget.viewModel,
-        child: new ListView.builder(
-            itemCount: _widgetDefs(context).length,
-            itemBuilder: (BuildContext ctx, int index) {
-              final widgetDef = _widgetDefs(context)[index];
-              return new DemoWidgetItem(child: widgetDef);
-            }));
+    return ScopedModelDescendant<WidgetDemoTabViewModel>(
+        builder: (context, _, model) {
+      _viewModel = model;
+      return new ListView.builder(
+          itemCount: _widgetDefs(context).length,
+          itemBuilder: (BuildContext ctx, int index) {
+            final widgetDef = _widgetDefs(context)[index];
+            return new DemoWidgetItem(child: widgetDef);
+          });
+    });
   }
 
   List<WidgetDef> _widgetDefs(BuildContext context) {
@@ -167,7 +170,7 @@ class WidgetDemoTabPageState extends State<WidgetDemoTabPageWidget> {
           children: [widgetMap["DateTimePicker"]]),
       new WidgetDef(builder: (context) {
         String label =
-            "${widgetMap['Button'] == null ? "No ${widget.viewModel.isAdaptive ? 'adaptive' : ''} Button" : "${widget.viewModel.isAndroid ? "MaterialButton" : "CupertinoButton"}"}";
+            "${widgetMap['Button'] == null ? "No ${_viewModel.isAdaptive ? 'adaptive' : ''} Button" : "${_viewModel.isAndroid ? "MaterialButton" : "CupertinoButton"}"}";
         return Column(children: <Widget>[
           new Container(
               width: double.infinity,
@@ -177,11 +180,11 @@ class WidgetDemoTabPageState extends State<WidgetDemoTabPageWidget> {
         ]);
       }),
       _buildWidgetDef("Switch", context,
-          label: widget.viewModel.isAndroid ? "Switch" : "CupertinoSwitch",
+          label: _viewModel.isAndroid ? "Switch" : "CupertinoSwitch",
           children: <Widget>[
             widgetMap["Switch"],
             Text(
-                "This is a ${widget.viewModel.isAndroid ? "Switch" : "CupertionSwitch"} swithed ${widget.viewModel.switchValue ? "on" : "off"}")
+                "This is a ${_viewModel.isAndroid ? "Switch" : "CupertionSwitch"} swithed ${_viewModel.switchValue ? "on" : "off"}")
           ]),
       _buildWidgetDef("Checkbox", context,
           label: "Checkbox",
@@ -189,7 +192,7 @@ class WidgetDemoTabPageState extends State<WidgetDemoTabPageWidget> {
             widgetMap["Checkbox"] ?? new Container(),
             (widgetMap["Checkbox"] != null
                 ? Text(
-                    "This is a Checkbox ${widget.viewModel.checkBoxValue ? "checked" : "unchecked"}")
+                    "This is a Checkbox ${_viewModel.checkBoxValue ? "checked" : "unchecked"}")
                 : new Container())
           ]),
     ];
@@ -200,7 +203,7 @@ class WidgetDemoTabPageState extends State<WidgetDemoTabPageWidget> {
     Map<String, Widget> widgetMap = getWidgetMap(context);
     return new WidgetDef(builder: (context) {
       String labelText =
-          "${widgetMap[key] == null ? "No ${widget.viewModel.isAdaptive ? 'adaptive' : ''} $key" : label}";
+          "${widgetMap[key] == null ? "No ${_viewModel.isAdaptive ? 'adaptive' : ''} $key" : label}";
       return Column(children: <Widget>[
         new Container(
             width: double.infinity,
@@ -214,9 +217,9 @@ class WidgetDemoTabPageState extends State<WidgetDemoTabPageWidget> {
   }
 
   Map<String, Widget> getWidgetMap(BuildContext context) {
-    Map<String, Widget> widgetMap = widget.viewModel.isAdaptive
+    Map<String, Widget> widgetMap = _viewModel.isAdaptive
         ? _adaptiveWidgets()
-        : (widget.viewModel.isAndroid
+        : (_viewModel.isAndroid
             ? _materialWidgets(context)
             : _cupertinoWidgets());
     return widgetMap;
@@ -228,30 +231,33 @@ class WidgetDemoTabPageState extends State<WidgetDemoTabPageWidget> {
             child: Text("Button", style: res.textStyleNormalDark),
             onPressed: () {}),
         "Switch": new Switch(
-            value: widget.viewModel.switchValue,
+            value: _viewModel.switchValue,
             activeColor: Colors.indigoAccent,
-            onChanged: (bool value) => widget.viewModel.switchValue = value),
+            onChanged: (bool value) => _viewModel.switchValue = value),
         "Checkbox": new Checkbox(
-            value: widget.viewModel.checkBoxValue,
+            value: _viewModel.checkBoxValue,
             activeColor: Colors.indigoAccent,
-            onChanged: (bool value) => widget.viewModel.checkBoxValue = value),
+            onChanged: (bool value) {
+              print("onChanegd: ${_viewModel}");
+              _viewModel.checkBoxValue = value;
+            }),
         "DatePicker": new MaterialDateTimePicker(
             label: "Date",
-            valueDate: widget.viewModel.dateTime,
+            valueDate: _viewModel.dateTime,
             formatter: (date) => DateFormat.yMMMMd().format(date),
-            onDateChanged: (date) => widget.viewModel.dateTime = date),
+            onDateChanged: (date) => _viewModel.dateTime = date),
         "DateTimePicker": new MaterialDateTimePicker(
             label: "Date and Time",
-            valueDate: widget.viewModel.dateTime,
-            valueTime: TimeOfDay.fromDateTime(widget.viewModel.dateTime),
+            valueDate: _viewModel.dateTime,
+            valueTime: TimeOfDay.fromDateTime(_viewModel.dateTime),
             formatter: (value) {
               if (value is DateTime) return DateFormat.yMMMd().format(value);
               return value.format(context); //use default formatter.
             },
-            onDateChanged: (date) => widget.viewModel.dateTime = date,
+            onDateChanged: (date) => _viewModel.dateTime = date,
             onTimeChanged: (time) {
-              final d = widget.viewModel._dateTime;
-              widget.viewModel.dateTime =
+              final d = _viewModel._dateTime;
+              _viewModel.dateTime =
                   new DateTime(d.year, d.month, d.day, time.hour, time.minute);
             }),
       };
@@ -262,32 +268,35 @@ class WidgetDemoTabPageState extends State<WidgetDemoTabPageWidget> {
             child: Text("Button", style: res.textStyleNormalDark),
             onPressed: () {}),
         "Switch": new CupertinoSwitch(
-            value: widget.viewModel.switchValue,
+            value: _viewModel.switchValue,
             activeColor: Colors.indigoAccent,
-            onChanged: (bool value) => widget.viewModel.switchValue = value),
+            onChanged: (bool value) => _viewModel.switchValue = value),
         "Checkbox": new Checkbox(
-            value: widget.viewModel.checkBoxValue,
+            value: _viewModel.checkBoxValue,
             activeColor: Colors.indigoAccent,
-            onChanged: (bool value) => widget.viewModel.checkBoxValue = value),
+            onChanged: (bool value) {
+              print("onChanegd: ${_viewModel} to $value");
+              _viewModel.checkBoxValue = value;
+            }),
         "DatePicker": CupertinoDateTimePicker(
             mode: CupertinoDatePickerMode.date,
-            value: widget.viewModel.dateTime,
+            value: _viewModel.dateTime,
             label: "Date",
             formatter: (date) => DateFormat.yMMMMd().format(date),
-            onDateTimeChanged: (date) => widget.viewModel.dateTime = date),
+            onDateTimeChanged: (date) => _viewModel.dateTime = date),
         "DateTimePicker": CupertinoDateTimePicker(
             mode: CupertinoDatePickerMode.dateAndTime,
-            value: widget.viewModel.dateTime,
+            value: _viewModel.dateTime,
             label: "Date and Time",
             formatter: (date) => DateFormat.yMMMd().add_jm().format(date),
-            onDateTimeChanged: (date) => widget.viewModel.dateTime = date),
+            onDateTimeChanged: (date) => _viewModel.dateTime = date),
       };
 
   Map<String, Widget> _adaptiveWidgets() => {
         "Switch": new Switch.adaptive(
-            value: widget.viewModel.switchValue,
+            value: _viewModel.switchValue,
             activeColor: Colors.indigoAccent,
-            onChanged: (bool value) => widget.viewModel.switchValue = value),
+            onChanged: (bool value) => _viewModel.switchValue = value),
       };
 }
 
