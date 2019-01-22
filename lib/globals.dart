@@ -4,6 +4,8 @@ import 'package:flutter/cupertino.dart';
 
 typedef ValueFormatter = String Function(dynamic value);
 
+typedef PickerItemListBuilder = List<Widget> Function(BuildContext context);
+
 List<int> imageNames = [917971, 965986, 900890, 836945, 941223, 952679];
 
 List<T> map<T>(List list, Function handler) {

@@ -10,6 +10,20 @@ import 'package:flutter_carousel/widget_demo/widget_pickers_material.dart';
 import 'package:intl/intl.dart';
 import 'package:scoped_model/scoped_model.dart';
 
+const Map<String, Color> coolColors = {
+  "Indigo": Colors.indigo,
+  "White": Colors.white,
+  "Black": Colors.black,
+  "Red": Colors.red,
+  "Green": Colors.green,
+  "Blue": Colors.blue,
+  "Orange": Colors.orange,
+  "Yellow": Colors.yellow,
+  "Purple": Colors.purple,
+  "Cyan": Colors.cyan,
+  "Lime": Colors.lime,
+};
+
 class WidgetDef extends StatelessWidget {
   WidgetDef({this.child, this.label, this.builder});
 
@@ -134,6 +148,15 @@ class WidgetDemoTabViewModel extends Model {
     notifyListeners();
   }
 
+  Color _color = Colors.indigo;
+
+  Color get color => _color;
+
+  set color(Color color) {
+    _color = color;
+    notifyListeners();
+  }
+
   @override
   String toString() {
     return 'WidgetDemoTabViewModel{isAndroid: $isAndroid, isAdaptive: $isAdaptive, _switchValue: $_switchValue, _checkBoxValue: $_checkBoxValue, _dateTime: $_dateTime}';
@@ -162,6 +185,9 @@ class WidgetDemoTabPageWidget extends StatelessWidget {
   List<WidgetDef> _widgetDefs(BuildContext context) {
     Map<String, Widget> widgetMap = getWidgetMap(context);
     return [
+      _buildWidgetDef("Picker", context,
+          label: "${widgetMap["Picker"].runtimeType}",
+          children: [widgetMap["Picker"]]),
       _buildWidgetDef("DatePicker", context,
           label: "${widgetMap["DatePicker"].runtimeType}",
           children: [widgetMap["DatePicker"]]),
@@ -260,6 +286,32 @@ class WidgetDemoTabPageWidget extends StatelessWidget {
               _viewModel.dateTime =
                   new DateTime(d.year, d.month, d.day, time.hour, time.minute);
             }),
+        "Picker": MaterialPickerWidget(
+            value: _viewModel._color,
+            label: "Pick a color",
+            itemBuilder: (context) {
+              return coolColors.keys.map((key) {
+                Color col = coolColors[key];
+                return DropdownMenuItem<Color>(
+                    value: col,
+                    child: Row(children: [
+                      Padding(
+                        padding: EdgeInsets.only(right: 8.0),
+                        child: SizedBox(
+                            width: 32.0,
+                            height: 32.0,
+                            child: Container(
+                              decoration: BoxDecoration(color: col),
+                            )),
+                      ),
+                      Text(key, style: res.textStylePicker),
+                    ]));
+              }).toList();
+            },
+            formatter: (value) {
+              return colorNames()[value] ?? value.toString();
+            },
+            onSelectedItemChanged: (value) => _viewModel.color = value),
       };
 
   Map<String, Widget> _cupertinoWidgets() => {
@@ -290,6 +342,35 @@ class WidgetDemoTabPageWidget extends StatelessWidget {
             label: "Date and Time",
             formatter: (date) => DateFormat.yMMMd().add_jm().format(date),
             onDateTimeChanged: (date) => _viewModel.dateTime = date),
+        "Picker": CupertinoPickerWidget(
+            value: _viewModel.color,
+            label: "Pick a color",
+            itemBuilder: (context) {
+              return coolColors.keys.map((key) {
+                Color col = coolColors[key];
+                return Container(
+                    child: Row(children: [
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16.0),
+                    child: SizedBox(
+                        width: 32.0,
+                        height: 32.0,
+                        child: Container(
+                          width: double.infinity,
+                          height: double.infinity,
+                          decoration: BoxDecoration(color: col),
+                        )),
+                  ),
+                  Text(key, style: res.textStyleNormal),
+                ]));
+              }).toList();
+            },
+            formatter: (value) {
+              print("selected: $value");
+              return colorNames()[value] ?? value.toString();
+            },
+            indexMapper: (index) => coolColors.values.toList()[index],
+            onSelectedItemChanged: (value) => _viewModel.color = value),
       };
 
   Map<String, Widget> _adaptiveWidgets() => {
@@ -298,6 +379,8 @@ class WidgetDemoTabPageWidget extends StatelessWidget {
             activeColor: Colors.indigoAccent,
             onChanged: (bool value) => _viewModel.switchValue = value),
       };
+
+  Map<Color, String> colorNames() => coolColors.map((k, v) => MapEntry(v, k));
 }
 
 class DemoWidgetItem extends StatelessWidget {
@@ -308,12 +391,23 @@ class DemoWidgetItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.all(16.0),
-      width: double.infinity,
-      height: 140.0,
-      decoration: new BoxDecoration(border: res.borderBottom1),
-      child: child,
-    );
+/*    return new Padding(
+      padding:
+          const EdgeInsets.only(top: 16.0, bottom: 16.0, left: 8.0, right: 8.0),
+      child: new Card(
+          child: new Padding(
+              padding: const EdgeInsets.only(
+                  top: 0.0, bottom: 8.0, left: 8.0, right: 8.0),
+              child: child)),
+    );*/
+    return Card(
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.zero,
+        ),
+        child: Container(
+            padding: const EdgeInsets.all(16.0),
+            width: double.infinity,
+            height: 140.0,
+            child: child));
   }
 }

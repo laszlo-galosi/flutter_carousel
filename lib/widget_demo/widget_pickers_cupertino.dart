@@ -6,6 +6,61 @@ import 'package:intl/intl.dart';
 const double _pickerSheetHeight = 216.0;
 const double _pickerItemHeight = 32.0;
 
+typedef IndexValueMapper = dynamic Function(int index);
+
+class CupertinoPickerWidget extends StatelessWidget {
+  CupertinoPickerWidget(
+      {Key key,
+      @required this.itemBuilder,
+      this.onSelectedItemChanged,
+      this.indexMapper,
+      this.value,
+      this.label,
+      this.formatter});
+
+  final String label;
+  final dynamic value;
+  final ValueChanged<dynamic> onSelectedItemChanged;
+  final PickerItemListBuilder itemBuilder;
+  final IndexValueMapper indexMapper;
+
+  final FixedExtentScrollController _scrollController =
+      FixedExtentScrollController(initialItem: 0);
+
+  final ValueFormatter formatter;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        showCupertinoModalPopup<void>(
+          context: context,
+          builder: (BuildContext context) {
+            return CupertinoBottomPicker(
+              picker: CupertinoPicker(
+                  scrollController: _scrollController,
+                  itemExtent: _pickerItemHeight,
+                  backgroundColor: CupertinoColors.white,
+                  onSelectedItemChanged: (int index) {
+                    if (indexMapper != null)
+                      onSelectedItemChanged(indexMapper(index));
+                  },
+                  children: itemBuilder(context)),
+            );
+          },
+        );
+      },
+      child: CupertinoListItem(children: [
+        label != null ? Text(label) : Container(),
+        Text(
+          formatter(value) ?? value.toString(),
+          style: const TextStyle(color: CupertinoColors.inactiveGray),
+        )
+      ]),
+    );
+  }
+}
+
 class CupertinoDateTimePicker extends StatelessWidget {
   CupertinoDateTimePicker({
     Key key,

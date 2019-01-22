@@ -1,7 +1,47 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_carousel/globals.dart';
+import 'package:flutter_carousel/resources.dart' as res;
 import 'package:intl/intl.dart';
+
+class MaterialPickerWidget extends StatelessWidget {
+  MaterialPickerWidget(
+      {Key key,
+      @required this.itemBuilder,
+      this.onSelectedItemChanged,
+      this.value,
+      this.label,
+      this.formatter});
+
+  final String label;
+  final dynamic value;
+  final ValueChanged<dynamic> onSelectedItemChanged;
+  final PickerItemListBuilder itemBuilder;
+  final ValueFormatter formatter;
+
+  @override
+  Widget build(BuildContext context) {
+    final items = itemBuilder(context).toList();
+    return InputDecorator(
+      decoration: InputDecoration(
+        labelText: label,
+        hintText: label,
+        contentPadding: EdgeInsets.zero,
+//          border: InputBorder.none
+      ),
+      isEmpty: items.isEmpty,
+      child: DropdownButton<dynamic>(
+        value: value,
+        onChanged: (value) {
+          onSelectedItemChanged(value);
+        },
+        items: items,
+        isExpanded: true,
+        elevation: 0,
+      ),
+    );
+  }
+}
 
 class MaterialDateTimePicker extends StatelessWidget {
   const MaterialDateTimePicker(
@@ -38,12 +78,12 @@ class MaterialDateTimePicker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final TextStyle valueStyle = Theme.of(context).textTheme.title;
+    final TextStyle valueStyle = res.textStylePicker;
     return Row(
       crossAxisAlignment: CrossAxisAlignment.end,
       children: <Widget>[
         Expanded(
-          flex: 4,
+          flex: 5,
           child: InputDropdown(
             labelText: label,
             valueText:
@@ -96,6 +136,11 @@ class InputDropdown extends StatelessWidget {
       child: InputDecorator(
         decoration: InputDecoration(
           labelText: labelText,
+          border: UnderlineInputBorder(
+              borderSide: BorderSide(
+            width: 1.0,
+            color: res.colorDivider,
+          )),
         ),
         baseStyle: valueStyle,
         child: Row(

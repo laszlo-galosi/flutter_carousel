@@ -33,14 +33,21 @@ TextStyle textStyleTitleDark = new TextStyle(
   fontWeight: FontWeight.normal,
 );
 
+TextStyle textStylePicker = new TextStyle(
+  fontSize: 16.0,
+  fontWeight: FontWeight.normal,
+);
+
 EdgeInsets edgeInsetsH16 =
     EdgeInsets.symmetric(horizontal: 16.0, vertical: 0.0);
 
 EdgeInsets edgeInsetsItemH16V8 =
     EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0);
 
-BorderDirectional borderBottom1 = new BorderDirectional(
-    bottom: BorderSide(width: 1.0, color: Colors.black26));
+Color colorDivider = Color(0xFFBCBBC1);
+
+BorderDirectional borderBottom1 =
+    new BorderDirectional(bottom: BorderSide(width: 1.0, color: colorDivider));
 
 IconData backIcon(BuildContext context) {
   switch (Theme.of(context).platform) {
