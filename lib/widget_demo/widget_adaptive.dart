@@ -39,6 +39,83 @@ abstract class XWidget<I extends Widget, A extends Widget>
   A createAndroidWidget(BuildContext context);
 }
 
+class XButton extends XWidget<CupertinoButton, MaterialButton> {
+  XButton(
+      {Key key,
+      @required this.child,
+      this.padding,
+      this.color,
+      this.disabledColor,
+      this.minSize = 44.0,
+      this.pressedOpacity = 0.1,
+      this.borderRadius = const BorderRadius.all(Radius.circular(8.0)),
+      this.enabled = true,
+      @required this.onPressed});
+
+  /// The widget below this widget in the tree.
+  ///
+  /// Typically a [Text] widget.
+  final Widget child;
+
+  /// Defaults to 16.0 pixels.
+  final EdgeInsetsGeometry padding;
+
+  /// The color of the button's background.
+  final Color color;
+
+  /// The color of the button's background when the button is disabled.
+  final Color disabledColor;
+
+  /// The callback that is called when the button is tapped or otherwise activated.
+
+  final VoidCallback onPressed;
+
+  /// Minimum size of the button.
+  /// Defaults to 44.0 which the iOS Human Interface Guideline recommends as the
+  final double minSize;
+
+  /// The opacity that the button will fade to when it is pressed.
+  /// The button will have an opacity of 1.0 when it is not pressed.
+  ///
+  /// This defaults to 0.1. If null, opacity will not change on pressed if using
+  /// your own custom effects is desired.
+  final double pressedOpacity;
+
+  /// The radius of the button's corners when it has a background color.
+  ///
+  /// Defaults to round corners of 8 logical pixels.
+  final BorderRadius borderRadius;
+
+  /// Whether the button is enabled or disabled. Buttons are disabled by default. To
+  /// enable a button, set its [onPressed] property to a non-null value.
+  final bool enabled;
+
+  @override
+  CupertinoButton createIosWidget(BuildContext context) {
+    return new CupertinoButton(
+      child: this.child,
+      padding: this.padding,
+      onPressed: enabled ? this.onPressed : null,
+      color: this.color,
+      disabledColor: this.disabledColor,
+      minSize: this.minSize,
+      pressedOpacity: this.pressedOpacity,
+      borderRadius: this.borderRadius,
+    );
+  }
+
+  @override
+  MaterialButton createAndroidWidget(BuildContext context) {
+    return new MaterialButton(
+      child: this.child,
+      padding: this.padding,
+      onPressed: enabled ? this.onPressed : null,
+      color: this.color,
+      disabledColor: this.disabledColor,
+    );
+  }
+}
+
 class XPicker extends XWidget<CupertinoPickerWidget, MaterialPickerWidget> {
   XPicker(
       {Key key,

@@ -85,7 +85,7 @@ Widget getPageForRouteName(String routeName) {
     case '/shopping':
       return ShoppingPageWidget();
     case '/widget_demo':
-      return new WidgetDemoPageWidget();
+      return new WidgetDemoPageWidget(viewModel: new WidgetDemoPageViewModel());
     case "/scratch":
       return new ScratchDemoPageWidget(
         viewModel: new ScratchCardViewModel(),

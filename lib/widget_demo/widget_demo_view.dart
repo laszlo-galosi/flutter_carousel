@@ -54,62 +54,77 @@ class WidgetDef extends StatelessWidget {
   }
 }
 
-class WidgetDemoPageWidget extends StatefulWidget {
-  WidgetDemoPageWidget();
+/*class WidgetDemoPageWidget extends StatelessWidget {
+  WidgetDemoPageWidget({Key key, @required this.viewModel});
 
-  factory WidgetDemoPageWidget.forDesignTime() {
-    return new WidgetDemoPageWidget();
-  }
+  WidgetDemoPageViewModel viewModel;
 
   @override
   _WidgetDemoPageWidgetState createState() => new _WidgetDemoPageWidgetState();
+}*/
+
+class WidgetDemoPageViewModel extends Model {
+  double _sharedScrollPos = 0;
+
+  double get sharedScrollPos => _sharedScrollPos;
+
+  set sharedScrollPos(double pos) {
+    _sharedScrollPos = pos;
+    notifyListeners();
+  }
 }
 
-class _WidgetDemoPageWidgetState extends State<WidgetDemoPageWidget> {
+class WidgetDemoPageWidget extends StatelessWidget {
+  WidgetDemoPageWidget({Key key, @required this.viewModel});
+
+  WidgetDemoPageViewModel viewModel;
+
   @override
   Widget build(BuildContext context) {
     SharedDrawerState navState = SharedDrawer.of(context);
-    return new DefaultTabController(
-        length: 3,
-        child: new Scaffold(
-            appBar: AppBar(
-                title: Text(navState.selectedItem?.title ?? "",
-                    style: res.textStyleTitleDark),
-                leading: IconButton(
-                  icon: Icon(navState.shouldGoBack
-                      ? res.backIcon(context)
-                      : Icons.menu),
-                  onPressed: () {
-                    if (navState.shouldGoBack) {
-                      navState.navigator.currentState.pop();
-                    } else {
-                      RootScaffold.openDrawer(context);
-                    }
-                  },
-                ),
-                bottom: TabBar(
-                  tabs: [
-                    Tab(text: "Material"),
-                    Tab(text: "Cupertino"),
-                    Tab(text: "Adaptive"),
+    return new ScopedModel<WidgetDemoPageViewModel>(
+        model: viewModel,
+        child: new DefaultTabController(
+            length: 3,
+            child: new Scaffold(
+                appBar: AppBar(
+                    title: Text(navState.selectedItem?.title ?? "",
+                        style: res.textStyleTitleDark),
+                    leading: IconButton(
+                      icon: Icon(navState.shouldGoBack
+                          ? res.backIcon(context)
+                          : Icons.menu),
+                      onPressed: () {
+                        if (navState.shouldGoBack) {
+                          navState.navigator.currentState.pop();
+                        } else {
+                          RootScaffold.openDrawer(context);
+                        }
+                      },
+                    ),
+                    bottom: TabBar(
+                      tabs: [
+                        Tab(text: "Material"),
+                        Tab(text: "Cupertino"),
+                        Tab(text: "Adaptive"),
+                      ],
+                    )),
+                body: TabBarView(
+                  children: [
+                    new ScopedModel<WidgetDemoTabViewModel>(
+                      model: new WidgetDemoTabViewModel(isAndroid: true),
+                      child: new WidgetDemoTabPageWidget(),
+                    ),
+                    new ScopedModel<WidgetDemoTabViewModel>(
+                      model: new WidgetDemoTabViewModel(isAndroid: false),
+                      child: new WidgetDemoTabPageWidget(),
+                    ),
+                    new ScopedModel<WidgetDemoTabViewModel>(
+                        model: new WidgetDemoTabViewModel(
+                            isAdaptive: true, isAndroid: !Platform.isIOS),
+                        child: new WidgetDemoTabPageWidget()),
                   ],
-                )),
-            body: TabBarView(
-              children: [
-                new ScopedModel<WidgetDemoTabViewModel>(
-                  model: new WidgetDemoTabViewModel(isAndroid: true),
-                  child: new WidgetDemoTabPageWidget(),
-                ),
-                new ScopedModel<WidgetDemoTabViewModel>(
-                  model: new WidgetDemoTabViewModel(isAndroid: false),
-                  child: new WidgetDemoTabPageWidget(),
-                ),
-                new ScopedModel<WidgetDemoTabViewModel>(
-                    model: new WidgetDemoTabViewModel(
-                        isAdaptive: true, isAndroid: !Platform.isIOS),
-                    child: new WidgetDemoTabPageWidget()),
-              ],
-            )));
+                ))));
   }
 }
 
@@ -164,17 +179,45 @@ class WidgetDemoTabViewModel extends Model {
   }
 }
 
-class WidgetDemoTabPageWidget extends StatelessWidget {
+class WidgetDemoTabPageWidget extends StatefulWidget {
   WidgetDemoTabPageWidget({Key key});
 
+  WidgetDemoTabPageState createState() => new WidgetDemoTabPageState();
+}
+
+class WidgetDemoTabPageState extends State<WidgetDemoTabPageWidget> {
+  ScrollController _scrollController = new ScrollController();
+
   WidgetDemoTabViewModel _viewModel;
+  WidgetDemoPageViewModel _pageViewModel;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(() {
+      _pageViewModel?._sharedScrollPos = _scrollController.position.pixels;
+    });
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return ScopedModelDescendant<WidgetDemoTabViewModel>(
         builder: (context, _, model) {
       _viewModel = model;
+      _pageViewModel = ScopedModel.of<WidgetDemoPageViewModel>(context);
+      _scrollController = new ScrollController(
+          initialScrollOffset: _pageViewModel.sharedScrollPos);
+      _scrollController.addListener(() {
+        _pageViewModel?._sharedScrollPos = _scrollController.position.pixels;
+      });
       return new ListView.builder(
+          controller: _scrollController,
           itemCount: _widgetDefs(context).length,
           itemBuilder: (BuildContext ctx, int index) {
             final widgetDef = _widgetDefs(context)[index];
@@ -202,7 +245,11 @@ class WidgetDemoTabPageWidget extends StatelessWidget {
           new Container(
               width: double.infinity,
               padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
-              child: new Text(label, style: res.textStyleLabel)),
+              child: new Text(
+                  _viewModel.isAdaptive
+                      ? widgetMap["Button"]?.runtimeType.toString() ?? label
+                      : label,
+                  style: res.textStyleLabel)),
           matchParent(widgetMap["Button"]),
         ]);
       }),
@@ -414,6 +461,10 @@ class WidgetDemoTabPageWidget extends StatelessWidget {
           onSelectedItemChanged: (value) => _viewModel.color = value,
 //          widgetBuilder: (context) => _cupertinoWidgets()["Picker"],
         ),
+        "Button": new XButton(
+            color: Colors.indigoAccent,
+            child: Text("Button", style: res.textStyleNormalDark),
+            onPressed: () {}),
       };
 
   Map<Color, String> colorNames() => coolColors.map((k, v) => MapEntry(v, k));
