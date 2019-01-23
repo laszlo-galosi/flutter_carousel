@@ -1,6 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_carousel/globals.dart';
+import 'package:flutter_carousel/widget_demo/widget_adaptive.dart';
 import 'package:intl/intl.dart';
 
 const double _pickerSheetHeight = 216.0;
@@ -16,7 +16,7 @@ class CupertinoPickerWidget extends StatelessWidget {
       this.indexMapper,
       this.value,
       this.label,
-      this.formatter});
+      this.valueFormat});
 
   final String label;
   final dynamic value;
@@ -27,7 +27,7 @@ class CupertinoPickerWidget extends StatelessWidget {
   final FixedExtentScrollController _scrollController =
       FixedExtentScrollController(initialItem: 0);
 
-  final ValueFormatter formatter;
+  final ValueFormatter valueFormat;
 
   @override
   Widget build(BuildContext context) {
@@ -53,7 +53,7 @@ class CupertinoPickerWidget extends StatelessWidget {
       child: CupertinoListItem(children: [
         label != null ? Text(label) : Container(),
         Text(
-          formatter(value) ?? value.toString(),
+          valueFormat(value) ?? value.toString(),
           style: const TextStyle(color: CupertinoColors.inactiveGray),
         )
       ]),
@@ -67,16 +67,14 @@ class CupertinoDateTimePicker extends StatelessWidget {
     @required this.value,
     @required this.onDateTimeChanged,
     this.mode,
-    this.initDateTime,
     this.label,
-    this.formatter,
+    this.valueFormat,
   });
 
   final CupertinoDatePickerMode mode;
   final ValueChanged<DateTime> onDateTimeChanged;
-  final DateTime initDateTime;
   final DateTime value;
-  final ValueFormatter formatter;
+  final ValueFormatter valueFormat;
   final String label;
 
   @override
@@ -89,14 +87,14 @@ class CupertinoDateTimePicker extends StatelessWidget {
                 return CupertinoBottomPicker(
                     picker: CupertinoDatePicker(
                         mode: mode ?? CupertinoDatePickerMode.date,
-                        initialDateTime: initDateTime ?? DateTime.now(),
+                        initialDateTime: value,
                         onDateTimeChanged: onDateTimeChanged));
               });
         },
         child: CupertinoListItem(children: [
           Text(label ?? 'Date'),
           Text(
-            formatter(value) ?? DateFormat.yMMMMd().format(value),
+            valueFormat(value) ?? DateFormat.yMMMMd().format(value),
             style: const TextStyle(color: CupertinoColors.inactiveGray),
           )
         ]));

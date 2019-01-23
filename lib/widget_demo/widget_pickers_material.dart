@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_carousel/globals.dart';
 import 'package:flutter_carousel/resources.dart' as res;
+import 'package:flutter_carousel/widget_demo/widget_adaptive.dart';
 import 'package:intl/intl.dart';
 
 class MaterialPickerWidget extends StatelessWidget {
@@ -11,13 +11,13 @@ class MaterialPickerWidget extends StatelessWidget {
       this.onSelectedItemChanged,
       this.value,
       this.label,
-      this.formatter});
+      this.valueFormat});
 
   final String label;
   final dynamic value;
   final ValueChanged<dynamic> onSelectedItemChanged;
   final PickerItemListBuilder itemBuilder;
-  final ValueFormatter formatter;
+  final ValueFormatter valueFormat;
 
   @override
   Widget build(BuildContext context) {
@@ -46,61 +46,69 @@ class MaterialPickerWidget extends StatelessWidget {
 class MaterialDateTimePicker extends StatelessWidget {
   const MaterialDateTimePicker(
       {Key key,
+      this.mode = CupertinoDatePickerMode.date,
       this.label,
-      this.valueDate,
-      this.valueTime,
-      this.onDateChanged,
-      this.onTimeChanged,
-      this.formatter})
+      this.value,
+      this.onDateTimeChanged,
+      this.valueFormat})
       : super(key: key);
 
+  final CupertinoDatePickerMode mode;
   final String label;
-  final DateTime valueDate;
-  final TimeOfDay valueTime;
-  final ValueChanged<DateTime> onDateChanged;
-  final ValueChanged<TimeOfDay> onTimeChanged;
-  final ValueFormatter formatter;
+  final DateTime value;
+  final ValueChanged<DateTime> onDateTimeChanged;
+  final ValueFormatter valueFormat;
 
   Future<void> _selectDate(BuildContext context) async {
+    final time = TimeOfDay.fromDateTime(value);
     final DateTime picked = await showDatePicker(
         context: context,
-        initialDate: valueDate,
+        initialDate: value,
         firstDate: DateTime(2015, 8),
         lastDate: DateTime(2101));
-    if (picked != null && picked != valueDate) onDateChanged(picked);
+    if (picked != null && picked != value)
+      onDateTimeChanged(new DateTime(
+          picked.year, picked.month, picked.day, time.hour, time.minute));
   }
 
   Future<void> _selectTime(BuildContext context) async {
+    final time = TimeOfDay.fromDateTime(value);
     final TimeOfDay picked =
-        await showTimePicker(context: context, initialTime: valueTime);
-    if (picked != null && picked != valueTime) onTimeChanged(picked);
+        await showTimePicker(context: context, initialTime: time);
+    if (picked != null && picked != time) {
+      onDateTimeChanged(new DateTime(
+          value.year, value.month, value.day, picked.hour, picked.minute));
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final time = TimeOfDay.fromDateTime(value);
     final TextStyle valueStyle = res.textStylePicker;
     return Row(
       crossAxisAlignment: CrossAxisAlignment.end,
       children: <Widget>[
         Expanded(
           flex: 5,
-          child: InputDropdown(
-            labelText: label,
-            valueText:
-                formatter(valueDate) ?? DateFormat.yMMMMd().format(valueDate),
-            valueStyle: valueStyle,
-            onPressed: () {
-              _selectDate(context);
-            },
-          ),
+          child: mode != CupertinoDatePickerMode.time
+              ? InputDropdown(
+                  labelText: label,
+                  valueText:
+                      valueFormat(value) ?? DateFormat.yMMMMd().format(value),
+                  valueStyle: valueStyle,
+                  onPressed: () {
+                    _selectDate(context);
+                  },
+                )
+              : Container(),
         ),
         SizedBox(width: 12.0),
         Expanded(
           flex: 3,
-          child: valueTime != null
+          child: mode != CupertinoDatePickerMode.date
               ? InputDropdown(
                   valueText:
-                      formatter(valueTime) ?? valueTime?.format(context) ?? "",
+                      TimeOfDay.fromDateTime(value).format(context) ?? "",
                   valueStyle: valueStyle,
                   onPressed: () {
                     _selectTime(context);

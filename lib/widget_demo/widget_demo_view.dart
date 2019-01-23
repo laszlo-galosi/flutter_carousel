@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_carousel/globals.dart';
 import 'package:flutter_carousel/navigation/navigation_view_model.dart';
 import 'package:flutter_carousel/resources.dart' as res;
+import 'package:flutter_carousel/widget_demo/widget_adaptive.dart';
 import 'package:flutter_carousel/widget_demo/widget_pickers_cupertino.dart';
 import 'package:flutter_carousel/widget_demo/widget_pickers_material.dart';
 import 'package:intl/intl.dart';
@@ -269,22 +270,20 @@ class WidgetDemoTabPageWidget extends StatelessWidget {
             }),
         "DatePicker": new MaterialDateTimePicker(
             label: "Date",
-            valueDate: _viewModel.dateTime,
-            formatter: (date) => DateFormat.yMMMMd().format(date),
-            onDateChanged: (date) => _viewModel.dateTime = date),
+            value: _viewModel.dateTime,
+            valueFormat: (date) => DateFormat.yMMMMd().format(date),
+            onDateTimeChanged: (date) => _viewModel.dateTime = date),
         "DateTimePicker": new MaterialDateTimePicker(
+            mode: CupertinoDatePickerMode.dateAndTime,
             label: "Date and Time",
-            valueDate: _viewModel.dateTime,
-            valueTime: TimeOfDay.fromDateTime(_viewModel.dateTime),
-            formatter: (value) {
+            value: _viewModel.dateTime,
+            valueFormat: (value) {
               if (value is DateTime) return DateFormat.yMMMd().format(value);
               return value.format(context); //use default formatter.
             },
-            onDateChanged: (date) => _viewModel.dateTime = date,
-            onTimeChanged: (time) {
-              final d = _viewModel._dateTime;
-              _viewModel.dateTime =
-                  new DateTime(d.year, d.month, d.day, time.hour, time.minute);
+            onDateTimeChanged: (date) {
+              print("onDateTimeChanged $date");
+              _viewModel.dateTime = date;
             }),
         "Picker": MaterialPickerWidget(
             value: _viewModel._color,
@@ -308,7 +307,7 @@ class WidgetDemoTabPageWidget extends StatelessWidget {
                     ]));
               }).toList();
             },
-            formatter: (value) {
+            valueFormat: (value) {
               return colorNames()[value] ?? value.toString();
             },
             onSelectedItemChanged: (value) => _viewModel.color = value),
@@ -334,13 +333,13 @@ class WidgetDemoTabPageWidget extends StatelessWidget {
             mode: CupertinoDatePickerMode.date,
             value: _viewModel.dateTime,
             label: "Date",
-            formatter: (date) => DateFormat.yMMMMd().format(date),
+            valueFormat: (date) => DateFormat.yMMMMd().format(date),
             onDateTimeChanged: (date) => _viewModel.dateTime = date),
         "DateTimePicker": CupertinoDateTimePicker(
             mode: CupertinoDatePickerMode.dateAndTime,
             value: _viewModel.dateTime,
             label: "Date and Time",
-            formatter: (date) => DateFormat.yMMMd().add_jm().format(date),
+            valueFormat: (date) => DateFormat.yMMMd().add_jm().format(date),
             onDateTimeChanged: (date) => _viewModel.dateTime = date),
         "Picker": CupertinoPickerWidget(
             value: _viewModel.color,
@@ -365,10 +364,7 @@ class WidgetDemoTabPageWidget extends StatelessWidget {
                 ]));
               }).toList();
             },
-            formatter: (value) {
-              print("selected: $value");
-              return colorNames()[value] ?? value.toString();
-            },
+            valueFormat: (value) => colorNames()[value] ?? value.toString(),
             indexMapper: (index) => coolColors.values.toList()[index],
             onSelectedItemChanged: (value) => _viewModel.color = value),
       };
@@ -378,6 +374,46 @@ class WidgetDemoTabPageWidget extends StatelessWidget {
             value: _viewModel.switchValue,
             activeColor: Colors.indigoAccent,
             onChanged: (bool value) => _viewModel.switchValue = value),
+        "DatePicker": new XDateTimePicker(
+            mode: CupertinoDatePickerMode.date,
+            label: "Date",
+            value: _viewModel.dateTime,
+            valueFormat: (value) => DateFormat.yMMMd().format(value),
+            onDateTimeChanged: (date) => _viewModel.dateTime = date),
+        "DateTimePicker": new XDateTimePicker(
+          mode: CupertinoDatePickerMode.dateAndTime,
+          label: "Date",
+          value: _viewModel.dateTime,
+          valueFormat: (value) => DateFormat.yMMMd().format(value),
+          onDateTimeChanged: (date) => _viewModel.dateTime = date,
+          //widgetBuilder: (_) => _cupertinoWidgets()["DateTimePicker"],
+        ),
+        "Picker": XPicker(
+          value: _viewModel.color,
+          label: "Pick a color",
+          values: coolColors.values,
+          itemBuilder: (col, context) {
+            return Container(
+                child: Row(children: [
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16.0),
+                child: SizedBox(
+                    width: 32.0,
+                    height: 32.0,
+                    child: Container(
+                      width: double.infinity,
+                      height: double.infinity,
+                      decoration: BoxDecoration(color: col),
+                    )),
+              ),
+              Text(colorNames()[col], style: res.textStyleNormal),
+            ]));
+          },
+          valueFormat: (value) => colorNames()[value] ?? value.toString(),
+          indexMapper: (index) => coolColors.values.toList()[index],
+          onSelectedItemChanged: (value) => _viewModel.color = value,
+//          widgetBuilder: (context) => _cupertinoWidgets()["Picker"],
+        ),
       };
 
   Map<Color, String> colorNames() => coolColors.map((k, v) => MapEntry(v, k));

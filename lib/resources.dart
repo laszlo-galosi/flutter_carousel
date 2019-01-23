@@ -38,6 +38,12 @@ TextStyle textStylePicker = new TextStyle(
   fontWeight: FontWeight.normal,
 );
 
+TextStyle textStyleError = new TextStyle(
+  fontSize: 16.0,
+  color: Colors.red,
+  fontWeight: FontWeight.normal,
+);
+
 EdgeInsets edgeInsetsH16 =
     EdgeInsets.symmetric(horizontal: 16.0, vertical: 0.0);
 
