@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_carousel/resources.dart' as res;
-import 'package:flutter_carousel/widget_demo/widget_adaptive.dart';
+import 'package:flutter_carousel/widget_demo/xwidgets/widget_adaptive.dart';
 import 'package:intl/intl.dart';
 
 class MaterialPickerWidget extends StatelessWidget {
@@ -83,7 +83,6 @@ class MaterialDateTimePicker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final time = TimeOfDay.fromDateTime(value);
     final TextStyle valueStyle = res.textStylePicker;
     return Row(
       crossAxisAlignment: CrossAxisAlignment.end,

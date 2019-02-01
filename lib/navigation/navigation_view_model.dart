@@ -14,6 +14,29 @@ final List<NavigationItem> navigationMenuItems = [
         controller.close();
       }),
   new NavigationItem(
+      title: "Form Demo",
+      description:
+          "Input form demo, showcasing various input widgets and its functionality.",
+      routeName: "/form_demo",
+      icon: Icon(Icons.receipt),
+      navigationCallback: (drawerState, controller) {
+        drawerState.setShouldGoBack(false);
+        drawerState.navigator?.currentState?.pushReplacementNamed("/form_demo");
+        controller.close();
+      }),
+  new NavigationItem(
+      title: "Widget Demo",
+      routeName: "/widget_demo",
+      icon: Icon(Icons.widgets),
+      description:
+          "Material and Cupertino Widget demo to showcase differences of the platforms.",
+      navigationCallback: (drawerState, controller) {
+        drawerState.setShouldGoBack(false);
+        drawerState.navigator?.currentState
+            ?.pushReplacementNamed("/widget_demo");
+        controller.close();
+      }),
+  new NavigationItem(
       title: "Infinite List Demo",
       routeName: "/infinite_list",
       icon: Icon(Icons.list),
@@ -58,18 +81,6 @@ final List<NavigationItem> navigationMenuItems = [
       navigationCallback: (drawerState, controller) {
         drawerState.setShouldGoBack(false);
         drawerState.navigator?.currentState?.pushReplacementNamed("/shopping");
-        controller.close();
-      }),
-  new NavigationItem(
-      title: "Widget Demo",
-      routeName: "/widget_demo",
-      icon: Icon(Icons.widgets),
-      description:
-          "Material and Cupertino Widget demo to showcase differences of the platforms.",
-      navigationCallback: (drawerState, controller) {
-        drawerState.setShouldGoBack(false);
-        drawerState.navigator?.currentState
-            ?.pushReplacementNamed("/widget_demo");
         controller.close();
       }),
 ];

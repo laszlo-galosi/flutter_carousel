@@ -5,9 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_carousel/globals.dart';
 import 'package:flutter_carousel/navigation/navigation_view_model.dart';
 import 'package:flutter_carousel/resources.dart' as res;
-import 'package:flutter_carousel/widget_demo/widget_adaptive.dart';
-import 'package:flutter_carousel/widget_demo/widget_pickers_cupertino.dart';
-import 'package:flutter_carousel/widget_demo/widget_pickers_material.dart';
+import 'package:flutter_carousel/widget_demo/xwidgets/widget_adaptive.dart';
+import 'package:flutter_carousel/widget_demo/xwidgets/widget_adaptive_form.dart';
+import 'package:flutter_carousel/widget_demo/xwidgets/widget_pickers_cupertino.dart';
+import 'package:flutter_carousel/widget_demo/xwidgets/widget_pickers_material.dart';
 import 'package:intl/intl.dart';
 import 'package:scoped_model/scoped_model.dart';
 
@@ -72,12 +73,29 @@ class WidgetDemoPageViewModel extends Model {
     _sharedScrollPos = pos;
     notifyListeners();
   }
+
+  bool _platformFlipped = XTextEditField.platformFlipped;
+
+  bool get platformFlipped => _platformFlipped;
+
+  set platformFlipped(bool flipped) {
+    XTextEditField.platformFlipped = flipped;
+    XStatelessWidget.platformFlipped = flipped;
+    _platformFlipped = flipped;
+    notifyListeners();
+  }
 }
 
 class WidgetDemoPageWidget extends StatelessWidget {
   WidgetDemoPageWidget({Key key, @required this.viewModel});
 
-  WidgetDemoPageViewModel viewModel;
+  final WidgetDemoPageViewModel viewModel;
+
+  final iosIcon = Image.asset(
+    'images/iOS-logo.png',
+    height: 24.0,
+    color: Colors.white,
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -87,6 +105,9 @@ class WidgetDemoPageWidget extends StatelessWidget {
         child: new DefaultTabController(
             length: 3,
             child: new Scaffold(
+                //Need this to fix TextFormField keyboard overlapping widgets
+                // when using nested Scaffold.
+                resizeToAvoidBottomPadding: false,
                 appBar: AppBar(
                     title: Text(navState.selectedItem?.title ?? "",
                         style: res.textStyleTitleDark),
@@ -102,6 +123,22 @@ class WidgetDemoPageWidget extends StatelessWidget {
                         }
                       },
                     ),
+                    /*actions: <Widget>[
+                      // action button
+                      IconButton(
+                        icon: Platform.isAndroid
+                            ? (viewModel.platformFlipped
+                                ? Icon(Icons.android)
+                                : iosIcon)
+                            : (viewModel.platformFlipped
+                                ? iosIcon
+                                : Icon(Icons.android)),
+                        onPressed: () {
+                          viewModel.platformFlipped =
+                              !viewModel._platformFlipped;
+                        },
+                      )
+                    ],*/
                     bottom: TabBar(
                       tabs: [
                         Tab(text: "Material"),
@@ -229,6 +266,9 @@ class WidgetDemoTabPageState extends State<WidgetDemoTabPageWidget> {
   List<WidgetDef> _widgetDefs(BuildContext context) {
     Map<String, Widget> widgetMap = getWidgetMap(context);
     return [
+      _buildWidgetDef("TextFormField", context,
+          label: "${widgetMap["TextFormField"].runtimeType}",
+          children: [widgetMap["TextFormField"]]),
       _buildWidgetDef("Picker", context,
           label: "${widgetMap["Picker"].runtimeType}",
           children: [widgetMap["Picker"]]),
@@ -312,7 +352,7 @@ class WidgetDemoTabPageState extends State<WidgetDemoTabPageWidget> {
             value: _viewModel.checkBoxValue,
             activeColor: Colors.indigoAccent,
             onChanged: (bool value) {
-              print("onChanegd: ${_viewModel}");
+              print("onChanegd: $_viewModel");
               _viewModel.checkBoxValue = value;
             }),
         "DatePicker": new MaterialDateTimePicker(
@@ -358,6 +398,20 @@ class WidgetDemoTabPageState extends State<WidgetDemoTabPageWidget> {
               return colorNames()[value] ?? value.toString();
             },
             onSelectedItemChanged: (value) => _viewModel.color = value),
+        "TextFormField": new TextFormField(
+          decoration: InputDecoration(
+            border: const UnderlineInputBorder(),
+            filled: true,
+            hintText: "Enter your full name",
+            labelText: "Name",
+          ),
+          autovalidate: true,
+          validator: (value) {
+            return value == null || value.isEmpty
+                ? "A mező kitöltése kötelező"
+                : null;
+          },
+        ),
       };
 
   Map<String, Widget> _cupertinoWidgets() => {
@@ -373,7 +427,7 @@ class WidgetDemoTabPageState extends State<WidgetDemoTabPageWidget> {
             value: _viewModel.checkBoxValue,
             activeColor: Colors.indigoAccent,
             onChanged: (bool value) {
-              print("onChanegd: ${_viewModel} to $value");
+              print("onChanegd: $_viewModel to $value");
               _viewModel.checkBoxValue = value;
             }),
         "DatePicker": CupertinoDateTimePicker(
@@ -414,6 +468,10 @@ class WidgetDemoTabPageState extends State<WidgetDemoTabPageWidget> {
             valueFormat: (value) => colorNames()[value] ?? value.toString(),
             indexMapper: (index) => coolColors.values.toList()[index],
             onSelectedItemChanged: (value) => _viewModel.color = value),
+        "TextFormField": new CupertinoTextField(
+          placeholder: "Enter your full name.",
+          prefix: Text("Name"),
+        ),
       };
 
   Map<String, Widget> _adaptiveWidgets() => {
@@ -465,6 +523,17 @@ class WidgetDemoTabPageState extends State<WidgetDemoTabPageWidget> {
             color: Colors.indigoAccent,
             child: Text("Button", style: res.textStyleNormalDark),
             onPressed: () {}),
+        "TextFormField": new XTextEditField(
+            fieldModel: new XFormFieldModel(
+          hintText: "Enter your full name.",
+          labelText: "Name",
+          autovalidate: true,
+          validator: (value) {
+            return value == null || value.isEmpty
+                ? "A mező kitöltése kötelező"
+                : null;
+          },
+        )),
       };
 
   Map<Color, String> colorNames() => coolColors.map((k, v) => MapEntry(v, k));
@@ -494,7 +563,6 @@ class DemoWidgetItem extends StatelessWidget {
         child: Container(
             padding: const EdgeInsets.all(16.0),
             width: double.infinity,
-            height: 140.0,
             child: child));
   }
 }

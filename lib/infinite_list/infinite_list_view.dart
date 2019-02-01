@@ -36,10 +36,6 @@ class _InfiniteListDemoPageWidgetState extends State<InfiniteListDemoPageWidget>
     //_loadData();
   }
 
-  Future _loadData() async {
-    await widget.viewModel.loadPage(offset: _currentOffset);
-  }
-
   @override
   Widget build(BuildContext context) {
     SharedDrawerState navState = SharedDrawer.of(context);

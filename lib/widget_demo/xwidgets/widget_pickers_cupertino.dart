@@ -1,6 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_carousel/widget_demo/widget_adaptive.dart';
+import 'package:flutter_carousel/widget_demo/xwidgets/widget_adaptive.dart';
 import 'package:intl/intl.dart';
 
 const double _pickerSheetHeight = 216.0;

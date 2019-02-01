@@ -15,6 +15,17 @@ TextStyle textStyleLabel = new TextStyle(
   fontWeight: FontWeight.normal,
 );
 
+TextStyle textStyleHint = new TextStyle(
+  fontWeight: FontWeight.normal,
+  color: Colors.grey,
+);
+
+TextStyle textStyleLabelSecondary = new TextStyle(
+  fontSize: 12.0,
+  fontWeight: FontWeight.normal,
+  color: Colors.grey,
+);
+
 TextStyle textStyleNormalDark = new TextStyle(
   color: Colors.white,
   fontSize: 16.0,

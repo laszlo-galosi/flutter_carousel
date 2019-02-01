@@ -58,7 +58,7 @@ class _MyAppState extends State<MyApp> {
               drawer: NavigationDrawerWidget(),
               body: child,
             ));
-      }, //      home: HomePageView(),
+      },
     );
   }
 }

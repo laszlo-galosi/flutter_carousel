@@ -3,8 +3,8 @@ import 'dart:io' show Platform;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_carousel/resources.dart' as res;
-import 'package:flutter_carousel/widget_demo/widget_pickers_cupertino.dart';
-import 'package:flutter_carousel/widget_demo/widget_pickers_material.dart';
+import 'package:flutter_carousel/widget_demo/xwidgets/widget_pickers_cupertino.dart';
+import 'package:flutter_carousel/widget_demo/xwidgets/widget_pickers_material.dart';
 
 typedef ValueFormatter = String Function(dynamic value);
 
@@ -13,7 +13,7 @@ typedef PickerItemListBuilder = List<Widget> Function(BuildContext context);
 typedef PickerListItemBuilder = Widget Function(
     dynamic value, BuildContext context);
 
-abstract class XWidget<I extends Widget, A extends Widget>
+abstract class XStatelessWidget<I extends Widget, A extends Widget>
     extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -21,9 +21,14 @@ abstract class XWidget<I extends Widget, A extends Widget>
       return customBuilder()(context);
     }
     if (Platform.isAndroid) {
-      return createAndroidWidget(context);
+//      return createAndroidWidget(context, this);
+      return isPlatformFlipped()
+          ? createIosWidget(context)
+          : createAndroidWidget(context);
     } else if (Platform.isIOS) {
-      return createIosWidget(context);
+      return isPlatformFlipped()
+          ? createAndroidWidget(context)
+          : createIosWidget(context);
     }
     // platform not supported returns an error text.
     return Text(
@@ -37,9 +42,62 @@ abstract class XWidget<I extends Widget, A extends Widget>
   I createIosWidget(BuildContext context);
 
   A createAndroidWidget(BuildContext context);
+
+  bool isPlatformFlipped() => XStatelessWidget.platformFlipped;
+
+  static bool platformFlipped = false;
 }
 
-class XButton extends XWidget<CupertinoButton, MaterialButton> {
+/// Signature for building the widget representing the form field.
+///
+/// Used by [FormField.builder].
+typedef XFormFieldBuilder<T> = Widget Function(FormFieldState<T> field);
+
+mixin XFormFieldMixin<V, I extends FormField<V>, A extends FormField<V>>
+    on FormField<V> {
+  I createIosWidget(FormFieldState<V> field);
+
+  A createAndroidWidget(FormFieldState<V> field);
+
+  bool isPlatformFlipped() => false;
+}
+
+mixin XFormFieldStateMixin<V, I extends Widget, A extends Widget,
+    W extends StatefulWidget> on FormFieldState<V> {
+  @override
+  Widget build(BuildContext context) {
+    //Call super build, to call [FormFieldState._register]
+    super.build(context);
+    if (customBuilder() != null) {
+      return customBuilder()(this);
+    }
+    if (Platform.isAndroid) {
+//      return createAndroidWidget(context, this);
+      return isPlatformFlipped()
+          ? createIosWidget(this)
+          : createAndroidWidget(this);
+    } else if (Platform.isIOS) {
+      return isPlatformFlipped()
+          ? createAndroidWidget(this)
+          : createIosWidget(this);
+    }
+    // platform not supported returns an error text.
+    return Text(
+      "Error ${Theme.of(context).platform} platform not supported yet.",
+      style: res.textStyleError,
+    );
+  }
+
+  I createIosWidget(FormFieldState<V> field) => null;
+
+  A createAndroidWidget(FormFieldState<V> field) => null;
+
+  FormFieldBuilder<V> customBuilder() => null;
+
+  bool isPlatformFlipped() => false;
+}
+
+class XButton extends XStatelessWidget<CupertinoButton, MaterialButton> {
   XButton(
       {Key key,
       @required this.child,
@@ -96,7 +154,7 @@ class XButton extends XWidget<CupertinoButton, MaterialButton> {
       child: this.child,
       padding: this.padding,
       onPressed: enabled ? this.onPressed : null,
-      color: this.color,
+      color: this.color ?? Theme.of(context).accentColor,
       disabledColor: this.disabledColor,
       minSize: this.minSize,
       pressedOpacity: this.pressedOpacity,
@@ -110,13 +168,14 @@ class XButton extends XWidget<CupertinoButton, MaterialButton> {
       child: this.child,
       padding: this.padding,
       onPressed: enabled ? this.onPressed : null,
-      color: this.color,
+      color: this.color ?? Theme.of(context).accentColor,
       disabledColor: this.disabledColor,
     );
   }
 }
 
-class XPicker extends XWidget<CupertinoPickerWidget, MaterialPickerWidget> {
+class XPicker
+    extends XStatelessWidget<CupertinoPickerWidget, MaterialPickerWidget> {
   XPicker(
       {Key key,
       @required this.value,
@@ -176,7 +235,7 @@ class XPicker extends XWidget<CupertinoPickerWidget, MaterialPickerWidget> {
 }
 
 class XDateTimePicker
-    extends XWidget<CupertinoDateTimePicker, MaterialDateTimePicker> {
+    extends XStatelessWidget<CupertinoDateTimePicker, MaterialDateTimePicker> {
   XDateTimePicker({
     Key key,
     @required this.value,

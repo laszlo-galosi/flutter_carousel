@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_carousel/carousel_widget/carousel_widget_view.dart';
+import 'package:flutter_carousel/form_demo/form_demo_view.dart';
+import 'package:flutter_carousel/form_demo/form_demo_view_model.dart';
 import 'package:flutter_carousel/home_page/home_page_view.dart';
 import 'package:flutter_carousel/infinite_list/infinite_list_demo_view_model.dart';
 import 'package:flutter_carousel/infinite_list/infinite_list_view.dart';
@@ -93,6 +95,8 @@ Widget getPageForRouteName(String routeName) {
     case "/infinite_list":
       return new InfiniteListDemoPageWidget(
           viewModel: InfiniteListDemoViewModel(api: NapisorsjegyApiService()));
+    case "/form_demo":
+      return new FormDemoPageWidget(viewModel: FormDemoViewModel());
     default:
       return Center(
           child: Container(
