@@ -308,7 +308,11 @@ class XTextEditFieldState extends FormFieldState<String>
   void reset() {
     super.reset();
     setState(() {
-      _effectiveController.text = model.initialValue;
+      if (!_effectiveController.text?.isEmpty ?? true)
+        didChange(_effectiveController.text);
+      else
+        _effectiveController.text = model.initialValue ?? '';
+      model.focusNode?.unfocus();
     });
   }
 
@@ -328,7 +332,6 @@ class XTextEditFieldState extends FormFieldState<String>
   TextField createAndroidWidget(FormFieldState<String> field) {
     var theme = Theme.of(field.context);
     final XTextEditFieldState state = field as XTextEditFieldState;
-    final focusNode = model.focusNode ?? new FocusNode();
     return new TextField(
       decoration: model
           .effectiveDecoration(context)
@@ -341,9 +344,11 @@ class XTextEditFieldState extends FormFieldState<String>
       obscureText: model.obscureText,
       scrollPadding: model.scrollPadding ?? defaultScrollPadding,
       autofocus: model.autofocus,
-      focusNode: focusNode,
+      focusNode: model.focusNode ?? new FocusNode(),
       controller: state._effectiveController,
       onChanged: field.didChange,
+      onSubmitted:
+          model.onFieldSubmitted ?? model.defaultOnFieldSubmitted(context),
       onEditingComplete: model.onEditingComplete,
       enabled: model.enabled,
     );
@@ -370,7 +375,7 @@ class XTextEditFieldState extends FormFieldState<String>
         obscureText: model.obscureText,
         scrollPadding: model.scrollPadding ?? defaultScrollPadding,
         autofocus: model.autofocus,
-        focusNode: model.focusNode,
+        focusNode: model.focusNode ?? new FocusNode(),
         controller: state._effectiveController,
         onChanged: field.didChange,
         onEditingComplete: model.onEditingComplete,
@@ -438,9 +443,11 @@ class _XPasswordFieldState extends XTextEditFieldState {
       obscureText: _obscureText,
       scrollPadding: model.scrollPadding ?? defaultScrollPadding,
       autofocus: model.autofocus,
-      focusNode: model.focusNode,
+      focusNode: model.focusNode ?? new FocusNode(),
       controller: state._effectiveController,
       onChanged: field.didChange,
+      onSubmitted:
+          model.onFieldSubmitted ?? model.defaultOnFieldSubmitted(context),
       onEditingComplete: model.onEditingComplete,
       enabled: model.enabled,
     );
@@ -481,7 +488,7 @@ class _XPasswordFieldState extends XTextEditFieldState {
           textInputAction: model.textInputAction ?? TextInputAction.next,
           obscureText: _obscureText,
           autofocus: model.autofocus,
-          focusNode: model.focusNode,
+          focusNode: model.focusNode ?? new FocusNode(),
           controller: state._effectiveController,
           onChanged: field.didChange,
           onEditingComplete: model.onEditingComplete,
