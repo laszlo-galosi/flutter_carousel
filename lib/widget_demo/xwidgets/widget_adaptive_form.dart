@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_carousel/widget_demo/xwidgets/widget_adaptive.dart';
 
 // Default iOS style from HIG specs with larger font.
@@ -25,7 +26,8 @@ class XFormFieldModel {
     this.onFieldSubmitted,
     this.keyboardType,
     this.inputStyle,
-    this.textAlign = TextAlign.start,
+    this.focusedTextAlign = TextAlign.start,
+    this.unfocusedTextAlign = TextAlign.start,
     this.labelText,
     this.labelStyle,
     this.hintText,
@@ -37,12 +39,94 @@ class XFormFieldModel {
     this.obscureText = false,
     this.autocorrect = false,
     this.autofocus = false,
+    this.maxLength,
+    this.maxLengthEnforced = true,
+    this.maxLines,
+    this.inputFormatters,
     this.initialValue,
     this.focusNode,
     this.nextFocusNode,
     this.onSaved,
+    this.onChanged,
     this.enabled = true,
+    this.prefix,
+    this.prefixMode = OverlayVisibilityMode.always,
+    this.suffix,
+    this.suffixMode = OverlayVisibilityMode.always,
   });
+
+  XFormFieldModel copyWith({
+    TextEditingController controller,
+    bool autovalidate = false,
+    FormFieldValidator<String> validator,
+    VoidCallback onEditingComplete,
+    ValueChanged<String> onFieldSubmitted,
+    TextInputType keyboardType,
+    TextStyle inputStyle,
+    TextAlign focusedTextAlign,
+    TextAlign unfocusedTextAlign,
+    String labelText,
+    TextStyle labelStyle,
+    String hintText,
+    TextStyle hintStyle,
+    TextCapitalization textCapitalization,
+    TextInputAction textInputAction,
+    EdgeInsets scrollPadding,
+    InputDecoration decoration,
+    bool obscureText,
+    bool autocorrect,
+    bool autofocus,
+    int maxLength,
+    bool maxLengthEnforced,
+    int maxLines,
+    List<TextInputFormatter> inputFormatters,
+    String initialValue,
+    FocusNode focusNode,
+    FocusNode nextFocusNode,
+    FormFieldSetter<String> onSaved,
+    ValueChanged<String> onChanged,
+    bool enabled,
+    Widget prefix,
+    OverlayVisibilityMode prefixMode,
+    Widget suffix,
+    OverlayVisibilityMode suffixMode,
+  }) =>
+      new XFormFieldModel(
+        controller: controller ?? this.controller,
+        autovalidate: autovalidate ?? this.autovalidate,
+        validator: validator ?? this.validator,
+        onEditingComplete: onEditingComplete ?? this.onEditingComplete,
+        onFieldSubmitted: onFieldSubmitted ?? this.onFieldSubmitted,
+        keyboardType: keyboardType ?? this.keyboardType,
+        inputStyle: inputStyle ?? this.inputStyle,
+        focusedTextAlign: focusedTextAlign ?? this.focusedTextAlign,
+        unfocusedTextAlign: unfocusedTextAlign ?? this.unfocusedTextAlign,
+        labelText: labelText ?? this.labelText,
+        labelStyle: labelStyle ?? this.labelStyle,
+        hintText: hintText ?? this.hintText,
+        hintStyle: hintStyle ?? this.hintStyle,
+        textCapitalization: textCapitalization ?? this.textCapitalization,
+        textInputAction: textInputAction ?? this.textInputAction,
+        scrollPadding: scrollPadding ?? this.scrollPadding,
+        decoration: decoration ?? this.decoration,
+        obscureText: obscureText ?? this.obscureText,
+        autocorrect: autocorrect ?? this.autocorrect,
+        autofocus: autofocus ?? this.autofocus,
+        maxLength: maxLength ?? this.maxLength,
+        maxLengthEnforced: maxLengthEnforced ?? this.maxLengthEnforced,
+        maxLines: maxLines ?? this.maxLines,
+        inputFormatters: inputFormatters ?? this.inputFormatters,
+        initialValue: initialValue ?? this.initialValue,
+        focusNode: focusNode ?? this.focusNode,
+        nextFocusNode: nextFocusNode ?? this.nextFocusNode,
+        onSaved: onSaved ?? this.onSaved,
+        onChanged: onChanged ?? this.onChanged,
+        enabled: enabled ?? this.enabled,
+        prefix: prefix ?? this.prefix,
+        prefixMode: prefixMode ?? this.prefixMode,
+        suffix: suffix ?? this.suffix,
+        suffixMode: suffixMode ?? this.suffixMode,
+      );
 
   /// The style to use for the text being edited.
   ///
@@ -51,8 +135,15 @@ class XFormFieldModel {
   /// - Cupertino: see [CupertinoTextField.style]
   final TextStyle inputStyle;
 
-  /// {@macro flutter.widgets.editableText.textAlign}
-  final TextAlign textAlign;
+  /// How the text should be aligned horizontally when it is focused.
+  ///
+  /// Defaults to [TextAlign.start] and cannot be null.
+  final TextAlign focusedTextAlign;
+
+  /// How the text should be aligned horizontally when it is not focused.
+  ///
+  /// Defaults to [TextAlign.start] and cannot be null.
+  final TextAlign unfocusedTextAlign;
 
   /// Text that describes the input field.
   ///
@@ -177,8 +268,73 @@ class XFormFieldModel {
   /// Defaults to EdgeInserts.all(20.0).
   final EdgeInsets scrollPadding;
 
-//  @override
-//  XTextEditFieldState createState() => XTextEditFieldState();
+  /// The maximum number of characters (Unicode scalar values) to allow in the
+  /// text field.
+  ///
+  /// If set, a character counter will be displayed below the
+  /// field, showing how many characters have been entered and how many are
+  /// allowed. After [maxLength] characters have been input, additional input
+  /// is ignored, unless [maxLengthEnforced] is set to false. The TextField
+  /// enforces the length with a [LengthLimitingTextInputFormatter], which is
+  /// evaluated after the supplied [inputFormatters], if any.
+  ///
+  /// This value must be either null or greater than zero. If set to null
+  /// (the default), there is no limit to the number of characters allowed.
+  ///
+  /// Whitespace characters (e.g. newline, space, tab) are included in the
+  /// character count.
+  ///
+  /// If [maxLengthEnforced] is set to false, then more than [maxLength]
+  /// characters may be entered, but the error counter and divider will
+  /// switch to the [decoration.errorStyle] when the limit is exceeded.
+  final int maxLength;
+
+  /// If true, prevents the field from allowing more than [maxLength]
+  /// characters.
+  ///
+  /// If [maxLength] is set, [maxLengthEnforced] indicates whether or not to
+  /// enforce the limit, or merely provide a character counter and warning when
+  /// [maxLength] is exceeded.
+  final bool maxLengthEnforced;
+
+  /// The maximum number of lines for the text to span, wrapping if necessary.
+  ///
+  /// If this is 1 (the default), the text will not wrap, but will scroll
+  /// horizontally instead.
+  ///
+  /// If this is null, there is no limit to the number of lines. If it is not
+  /// null, the value must be greater than zero.
+  final int maxLines;
+
+  /// Called when the text being edited changes.
+  final ValueChanged<String> onChanged;
+
+  /// Optional input validation and formatting overrides.
+  ///
+  /// Formatters are run in the provided order when the text input changes.
+  final List<TextInputFormatter> inputFormatters;
+
+  /// An optional [Widget] to display before the text.
+  final Widget prefix;
+
+  /// Controls the visibility of the [prefix] widget based on the state of
+  /// text entry when the [prefix] argument is not null.
+  ///
+  /// Defaults to [OverlayVisibilityMode.always] and cannot be null.
+  ///
+  /// Has no effect when [prefix] is null.
+  final OverlayVisibilityMode prefixMode;
+
+  /// An optional [Widget] to display after the text.
+  final Widget suffix;
+
+  /// Controls the visibility of the [suffix] widget based on the state of
+  /// text entry when the [suffix] argument is not null.
+  ///
+  /// Defaults to [OverlayVisibilityMode.always] and cannot be null.
+  ///
+  /// Has no effect when [suffix] is null.
+  final OverlayVisibilityMode suffixMode;
 
   ValueChanged<String> defaultOnFieldSubmitted(BuildContext context) {
     return (val) {
@@ -208,6 +364,8 @@ class XFormFieldModel {
 //        filled: true,
         isDense: true,
         contentPadding: EdgeInsets.zero,
+        prefix: prefix,
+        suffix: suffix,
       );
 
   InputDecoration _materialDecoration(BuildContext context) => (decoration ??
@@ -218,6 +376,8 @@ class XFormFieldModel {
             labelText: labelText,
             labelStyle: labelStyle,
             hintStyle: hintStyle,
+            prefix: prefix,
+            suffix: suffix,
           ))
       .applyDefaults(Theme.of(context).inputDecorationTheme);
 }
@@ -237,7 +397,7 @@ class XTextEditField extends FormField<String> {
             enabled: fieldModel.enabled,
             builder: (field) {});
 
-  final XFormFieldModel fieldModel;
+  XFormFieldModel fieldModel;
 
   @override
   XTextEditFieldState createState() => XTextEditFieldState();
@@ -269,6 +429,8 @@ class XTextEditFieldState extends FormFieldState<String>
 
   XFormFieldModel get model => widget.fieldModel;
 
+  FocusNode _focusNode;
+
   @override
   void initState() {
     super.initState();
@@ -277,6 +439,27 @@ class XTextEditFieldState extends FormFieldState<String>
     } else {
       model.controller.addListener(_handleControllerChanged);
     }
+    _focusNode = model.focusNode ?? new FocusNode();
+/*
+ //There is a flutter crash related to textAlign.
+ https://github.com/flutter/flutter/issues/27546   
+ _focusNode.addListener(_handleFocusChanged);
+*/
+    _handleFocusChanged();
+  }
+
+  TextAlign _textAlign = TextAlign.start;
+
+  TextAlign get textAlign => _textAlign;
+
+  set textAlign(TextAlign align) {
+    setState(() => _textAlign = align);
+  }
+
+  void _handleFocusChanged() {
+    textAlign = (model.focusNode?.hasFocus ?? false)
+        ? model.focusedTextAlign
+        : model.unfocusedTextAlign;
   }
 
   @override
@@ -301,6 +484,7 @@ class XTextEditFieldState extends FormFieldState<String>
   @override
   void dispose() {
     model.controller?.removeListener(_handleControllerChanged);
+    model.focusNode?.removeListener(_handleFocusChanged);
     super.dispose();
   }
 
@@ -308,7 +492,7 @@ class XTextEditFieldState extends FormFieldState<String>
   void reset() {
     super.reset();
     setState(() {
-      if (!_effectiveController.text?.isEmpty ?? true)
+      if (_effectiveController.text?.isNotEmpty ?? false)
         didChange(_effectiveController.text);
       else
         _effectiveController.text = model.initialValue ?? '';
@@ -337,16 +521,20 @@ class XTextEditFieldState extends FormFieldState<String>
           .effectiveDecoration(context)
           .copyWith(errorText: field.errorText),
       style: model.inputStyle ?? theme.textTheme.subhead,
-      textAlign: model.textAlign ?? TextAlign.start,
+      textAlign: textAlign,
       keyboardType: model.keyboardType,
       textCapitalization: model.textCapitalization ?? TextCapitalization.none,
       textInputAction: model.textInputAction ?? TextInputAction.next,
       obscureText: model.obscureText,
       scrollPadding: model.scrollPadding ?? defaultScrollPadding,
       autofocus: model.autofocus,
-      focusNode: model.focusNode ?? new FocusNode(),
+      maxLength: model.maxLength,
+      maxLengthEnforced: model.maxLengthEnforced ?? true,
+      maxLines: model.maxLines,
+      inputFormatters: model.inputFormatters,
+      focusNode: _focusNode,
       controller: state._effectiveController,
-      onChanged: field.didChange,
+      onChanged: model.onChanged ?? field.didChange,
       onSubmitted:
           model.onFieldSubmitted ?? model.defaultOnFieldSubmitted(context),
       onEditingComplete: model.onEditingComplete,
@@ -362,27 +550,32 @@ class XTextEditFieldState extends FormFieldState<String>
           .effectiveDecoration(context)
           .copyWith(errorText: field.errorText),
       child: new CupertinoTextField(
-        placeholder: model.hintText,
-        prefix: model.labelText != null
-            ? Text(model.labelText,
-                style: model.labelStyle ?? kDefaultTextStyle)
-            : null,
-        keyboardType: model.keyboardType,
-        style: model.inputStyle ?? kDefaultTextStyle,
-        textAlign: model.textAlign ?? TextAlign.start,
-        textCapitalization: model.textCapitalization ?? TextCapitalization.none,
-        textInputAction: model.textInputAction ?? TextInputAction.next,
-        obscureText: model.obscureText,
-        scrollPadding: model.scrollPadding ?? defaultScrollPadding,
-        autofocus: model.autofocus,
-        focusNode: model.focusNode ?? new FocusNode(),
-        controller: state._effectiveController,
-        onChanged: field.didChange,
-        onEditingComplete: model.onEditingComplete,
-        onSubmitted:
-            model.onFieldSubmitted ?? model.defaultOnFieldSubmitted(context),
-        enabled: model.enabled,
-      ),
+          placeholder: model.hintText,
+          prefix: model.prefix == null && model.labelText != null
+              ? Text(model.labelText,
+                  style: model.labelStyle ?? kDefaultTextStyle)
+              : model.prefix,
+          prefixMode: model.prefixMode,
+          keyboardType: model.keyboardType,
+          style: model.inputStyle ?? kDefaultTextStyle,
+          textAlign: textAlign,
+          textCapitalization:
+              model.textCapitalization ?? TextCapitalization.none,
+          textInputAction: model.textInputAction ?? TextInputAction.next,
+          obscureText: model.obscureText,
+          scrollPadding: model.scrollPadding ?? defaultScrollPadding,
+          autofocus: model.autofocus,
+          maxLength: model.maxLength,
+          maxLengthEnforced: model.maxLengthEnforced,
+          maxLines: model.maxLines,
+          inputFormatters: model.inputFormatters,
+          focusNode: model.focusNode ?? new FocusNode(),
+          controller: state._effectiveController,
+          onChanged: model.onChanged ?? field.didChange,
+          onEditingComplete: model.onEditingComplete,
+          onSubmitted:
+              model.onFieldSubmitted ?? model.defaultOnFieldSubmitted(context),
+          enabled: model.enabled),
     );
   }
 
@@ -436,16 +629,22 @@ class _XPasswordFieldState extends XTextEditFieldState {
                 : null,
           ),
       style: model.inputStyle ?? theme.textTheme.subhead,
-      textAlign: model.textAlign ?? TextAlign.start,
+      textAlign: model.focusNode?.hasFocus ?? false
+          ? model.focusedTextAlign
+          : model.unfocusedTextAlign,
       keyboardType: model.keyboardType,
       textCapitalization: model.textCapitalization ?? TextCapitalization.none,
       textInputAction: model.textInputAction ?? TextInputAction.next,
       obscureText: _obscureText,
       scrollPadding: model.scrollPadding ?? defaultScrollPadding,
       autofocus: model.autofocus,
+      maxLength: model.maxLength,
+      maxLengthEnforced: model.maxLengthEnforced ?? true,
+      maxLines: model.maxLines,
+      inputFormatters: model.inputFormatters,
       focusNode: model.focusNode ?? new FocusNode(),
       controller: state._effectiveController,
-      onChanged: field.didChange,
+      onChanged: model.onChanged ?? field.didChange,
       onSubmitted:
           model.onFieldSubmitted ?? model.defaultOnFieldSubmitted(context),
       onEditingComplete: model.onEditingComplete,
@@ -465,7 +664,7 @@ class _XPasswordFieldState extends XTextEditFieldState {
           prefix: model.labelText != null
               ? Text(model.labelText,
                   style: model.labelStyle ?? kDefaultTextStyle)
-              : null,
+              : model.prefix,
           suffix: this.showRevealIcon
               ? GestureDetector(
                   onTap: () {
@@ -482,15 +681,21 @@ class _XPasswordFieldState extends XTextEditFieldState {
               : null,
           keyboardType: model.keyboardType,
           style: model.inputStyle ?? kDefaultTextStyle,
-          textAlign: model.textAlign ?? TextAlign.start,
+          textAlign: model.focusNode?.hasFocus ?? false
+              ? model.focusedTextAlign
+              : model.unfocusedTextAlign,
           textCapitalization:
               model.textCapitalization ?? TextCapitalization.none,
           textInputAction: model.textInputAction ?? TextInputAction.next,
           obscureText: _obscureText,
           autofocus: model.autofocus,
+          maxLength: model.maxLength,
+          maxLengthEnforced: model.maxLengthEnforced ?? true,
+          maxLines: model.maxLines,
+          inputFormatters: model.inputFormatters,
           focusNode: model.focusNode ?? new FocusNode(),
           controller: state._effectiveController,
-          onChanged: field.didChange,
+          onChanged: model.onChanged ?? field.didChange,
           onEditingComplete: model.onEditingComplete,
           onSubmitted:
               model.onFieldSubmitted ?? model.defaultOnFieldSubmitted(context),

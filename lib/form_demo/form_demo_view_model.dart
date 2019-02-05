@@ -7,8 +7,16 @@ import 'package:scoped_model/scoped_model.dart';
 class FormDemoViewModel extends Model {
   FormDemoViewModel();
 
-  final Map<String, GlobalKey<XTextEditFieldState>> _keyMap = Map.fromIterable(
-      ["Name", "Email", "Password", "PasswordConfirm"],
+  final Map<String, GlobalKey<XTextEditFieldState>> _keyMap = Map.fromIterable([
+    "Name",
+    "Email",
+    "Password",
+    "PasswordConfirm",
+    "Phone",
+    "Telefon",
+    "Salary",
+    "About",
+  ],
       key: (name) => name,
       value: (name) => new GlobalKey<XTextEditFieldState>(debugLabel: name));
 
@@ -38,6 +46,33 @@ class FormDemoViewModel extends Model {
 
   set password(String password) {
     _password = password;
+    notifyListeners();
+  }
+
+  String _phone = null;
+
+  String get phone => _phone;
+
+  set phone(String phone) {
+    _phone = phone;
+    notifyListeners();
+  }
+
+  int _salary = 0;
+
+  int get salary => _salary;
+
+  set salary(int salary) {
+    _salary = salary;
+    notifyListeners();
+  }
+
+  String _about;
+
+  String get about => _about;
+
+  set about(String about) {
+    _about = about;
     notifyListeners();
   }
 

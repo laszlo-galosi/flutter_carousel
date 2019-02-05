@@ -2,18 +2,23 @@ import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_carousel/form_demo/form_demo_view_model.dart';
+import 'package:flutter_carousel/globals.dart';
 import 'package:flutter_carousel/navigation/navigation_view_model.dart';
 import 'package:flutter_carousel/resources.dart' as res;
 import 'package:flutter_carousel/widget_demo/xwidgets/widget_adaptive.dart';
 import 'package:flutter_carousel/widget_demo/xwidgets/widget_adaptive_form.dart';
+import 'package:intl/intl.dart';
 import 'package:scoped_model/scoped_model.dart';
 
 const String EMAIL_PATTERN =
     r"^[a-zóüöúőűáéíA-ZÓÜÖÚŐŰÁÉÍ00-9.!#\$%&'*+/=?^_`{|}~-]+@((\\[[0-9]{1,3}\\.[0-9]{1," +
         "3}\\.[0-9]{1,3}\\" +
         ".[0-9]{1,3}])|(([a-zóüöúőűáéíA-ZÓÜÖÚŐŰÁÉÍ0\\-0-9]+\\.)+[a-zA-Z]{2,}))\$";
+
+//final Logger log = new Logger('FormDemo');
 
 class FormDemoPageWidget extends StatelessWidget {
   FormDemoPageWidget({Key key, @required this.viewModel});
@@ -49,6 +54,7 @@ class _FormWidgetState extends State<FormWidget> {
   @override
   void initState() {
     super.initState();
+    initLogger("FormDemoPage");
     _scrollController.addListener(() {});
   }
 
@@ -193,7 +199,6 @@ class _FormWidgetState extends State<FormWidget> {
                         inputStyle: Platform.isAndroid
                             ? null
                             : res.textStyleLabelSecondary,
-                        textInputAction: TextInputAction.done,
                         validator: (val) {
                           final error = _validatePassword(val);
                           if (error == null &&
@@ -205,8 +210,88 @@ class _FormWidgetState extends State<FormWidget> {
                           return error;
                         },
                         focusNode: _focusNodeBy("PasswordConfirm"),
-                        nextFocusNode: _focusNodeBy("Name"),
+                        nextFocusNode: _focusNodeBy("Salary"),
                       )),
+                  const SizedBox(height: 24.0),
+                  XTextEditField(
+                      key: _viewModel.keyMap["Phone"],
+                      fieldModel: new XFormFieldModel(
+                        labelText: 'Phone Number *',
+                        labelStyle: res.textStyleMenu,
+                        hintText: 'Your phone number?',
+                        hintStyle: res.textStyleHint,
+                        keyboardType: TextInputType.phone,
+                        onSaved: (String value) {
+                          _viewModel.phone = value;
+                        },
+                        inputFormatters: [
+                          new LengthLimitingTextInputFormatter(12),
+                          new WhitelistingTextInputFormatter(
+                              new RegExp(r'[0-9+]+'))
+                        ],
+                        validator: (val) => val == null || val.isEmpty
+                            ? "Phone number is required."
+                            : null,
+                        focusNode: _focusNodeBy("Phone"),
+                        nextFocusNode: _focusNodeBy("Salary"),
+                      )),
+                  const SizedBox(height: 24.0),
+                  XTextEditField(
+                      key: _viewModel.keyMap["Salary"],
+                      fieldModel: new XFormFieldModel(
+                          labelText: 'Salary *',
+                          labelStyle: res.textStyleMenu,
+                          hintText: 'How much do you earn monthly?',
+                          hintStyle: res.textStyleHint,
+                          keyboardType: TextInputType.numberWithOptions(
+                              signed: false, decimal: false),
+                          onSaved: (String value) {
+                            final formatter =
+                                new NumberFormat("###,###.###", "hu-HU");
+                            _viewModel.salary = formatter.parse(value).toInt();
+                          },
+                          inputFormatters: [new _AmountTextInputFormatter()],
+                          focusedTextAlign: TextAlign.left,
+                          unfocusedTextAlign: TextAlign.end,
+                          validator: _validateAmount,
+                          initialValue:
+                              _AmountTextInputFormatter.format("150000"),
+                          focusNode: _focusNodeBy("Salary"),
+                          nextFocusNode: _focusNodeBy("About"),
+                          suffix: Padding(
+                              padding: EdgeInsets.only(left: 4.0),
+                              child: Text(
+                                "HUF",
+                                style: res.textStyleMenu,
+                              )))),
+                  const SizedBox(height: 24.0),
+                  Opacity(
+                      opacity: Platform.isIOS ||
+                              (Platform.isAndroid && _viewModel.platformFlipped)
+                          ? 1.0
+                          : 0.0,
+                      child:
+                          Text('About yourself *', style: res.textStyleMenu)),
+                  XTextEditField(
+                      key: _viewModel.keyMap["About"],
+                      fieldModel: new XFormFieldModel(
+                          labelText: 'About yourself *',
+                          prefix: Opacity(
+                            opacity: 0.0,
+                          ),
+                          labelStyle: res.textStyleMenu,
+                          hintText: 'Please write few words about yourself...',
+                          hintStyle: res.textStyleHint,
+//                          maxLines: 2,
+                          keyboardType: TextInputType.text,
+                          onSaved: (String value) {
+                            _viewModel.about = value;
+                          },
+                          validator: (val) => val == null || val.isEmpty
+                              ? "Please, tell some few words about yourself"
+                              : null,
+                          focusNode: _focusNodeBy("About"),
+                          textInputAction: TextInputAction.newline)),
                   const SizedBox(height: 24.0),
                   new XButton(
                       color: Colors.indigoAccent,
@@ -233,20 +318,20 @@ class _FormWidgetState extends State<FormWidget> {
     if (!form.validate()) {
       _autovalidate = true; // Start validating on every change.
       showMessage("Please fix the errors in red before submitting.");
-      print('Please fix the errors in red before submitting.');
+      log.fine('Please fix the errors in red before submitting.');
     } else {
       form.save();
       showMessage("Form validation success.");
-      print("Validation success. $_viewModel");
+      log.fine("Validation success. $_viewModel");
     }
   }
 
   String _validateName(String value) {
     _formWasEdited = true;
-    print("validateName '$value'");
+    log.shout("validateName '$value'");
     if (value == null || value.isEmpty) return 'Name is required.';
     final RegExp exp = RegExp(r'^[A-Za-z ]+$');
-    print("matches $exp: ${exp.hasMatch(value)}");
+    log.fine("matches $exp: ${exp.hasMatch(value)}");
     if (!exp.hasMatch(value))
       return 'Please enter only alphabetical characters.';
     return null;
@@ -254,23 +339,161 @@ class _FormWidgetState extends State<FormWidget> {
 
   String _validateEmail(String value) {
     _formWasEdited = true;
-    print("validateEmail '$value'");
+    log.fine("validateEmail '$value'");
     if (value == null || value.isEmpty) return 'Email is required.';
     final RegExp exp = RegExp(EMAIL_PATTERN);
-    print("matches $exp: ${exp.hasMatch(value)}");
+    log.fine("matches $exp: ${exp.hasMatch(value)}");
     if (!exp.hasMatch(value)) return 'Invalid email address';
     return null;
   }
 
   String _validatePassword(String value) {
     _formWasEdited = true;
-    print("validatePassword '$value'");
+    log.fine("validatePassword '$value'");
     if (value == null || value.isEmpty) return 'Password is required.';
     final RegExp exp =
         RegExp(r'^.*(?=.{6,})(?=.*[A-Z])(?=.*[0-9])[a-zA-Z0-9]+$');
-    print("matches $exp: ${exp.hasMatch(value)}");
+    log.fine("matches $exp: ${exp.hasMatch(value)}");
     if (!exp.hasMatch(value))
       return 'Password must contain at least 6 characthers,  an upper case character and a number.';
     return null;
+  }
+
+  String _validateAmount(String value) {
+    _formWasEdited = true;
+    log.fine("validateAmount '$value'");
+    if (value == null || value.isEmpty) return 'Salary is required.';
+    final formatter = new NumberFormat("###,###.###", "hu-HU");
+    try {
+      if (formatter.parse(value) <= 0) {
+        return "Salary must be greater than 0.";
+      }
+    } catch (FormatException) {
+      log.fine("Parsing error: $FormatException");
+      return "Invalid salary";
+    }
+    return null;
+  }
+}
+
+// Format incoming numeric text to fit the format of hungarian amounts
+class _AmountTextInputFormatter extends TextInputFormatter {
+  static String format(String text) {
+    // Do whatever you want
+    final formatter = new NumberFormat("###,###.###", "hu-HU");
+    return formatter.format(int.parse(text));
+  }
+
+  @override
+  TextEditingValue formatEditUpdate(
+      TextEditingValue oldValue, TextEditingValue newValue) {
+    if (oldValue.text == newValue.text) {
+      return newValue;
+    }
+    newValue = WhitelistingTextInputFormatter.digitsOnly
+        .formatEditUpdate(oldValue, newValue);
+    final int newTextLength = newValue.text.length;
+    if (newTextLength == 0) {
+      return newValue;
+    }
+    int usedSubstringIndex = 0;
+    final value = int.parse(newValue.text);
+    final formatter = new NumberFormat("###,###.###", "hu-HU");
+    final newText = new StringBuffer();
+    // Dump the rest.
+    if (newTextLength >= usedSubstringIndex) {
+      newText.write(formatter.format(value));
+    }
+    return TextEditingValue(
+      text: newText.toString(),
+      selection: TextSelection.collapsed(offset: newText.length),
+    );
+  }
+}
+
+/// Format incoming numeric text to fit the format of (###) ###-#### ##...
+/// Format incoming numeric text to fit the format of (###) ###-#### ##...
+class _UsNumberTextInputFormatter extends TextInputFormatter {
+  static final WhitelistingTextInputFormatter _formatter =
+      WhitelistingTextInputFormatter.digitsOnly;
+
+  @override
+  TextEditingValue formatEditUpdate(
+      TextEditingValue oldValue, TextEditingValue newValue) {
+    if (oldValue.text == newValue.text) {
+      return newValue;
+    }
+    newValue = _formatter.formatEditUpdate(oldValue, newValue);
+    final int newTextLength = newValue.text.length;
+    int selectionIndex = newValue.selection.end;
+    int usedSubstringIndex = 0;
+    final StringBuffer newText = StringBuffer();
+    if (newTextLength >= 1) {
+      newText.write('(');
+      if (newValue.selection.end >= 1) selectionIndex++;
+    }
+    if (newTextLength >= 4) {
+      newText.write(newValue.text.substring(0, usedSubstringIndex = 3) + ') ');
+      if (newValue.selection.end >= 3) selectionIndex += 2;
+    }
+    if (newTextLength >= 7) {
+      newText.write(newValue.text.substring(3, usedSubstringIndex = 6) + '-');
+      if (newValue.selection.end >= 6) selectionIndex++;
+    }
+    if (newTextLength >= 11) {
+      newText.write(newValue.text.substring(6, usedSubstringIndex = 10) + ' ');
+      if (newValue.selection.end >= 10) selectionIndex++;
+    }
+    // Dump the rest.
+    if (newTextLength >= usedSubstringIndex) {
+      newText.write(newValue.text.substring(usedSubstringIndex));
+    }
+    return TextEditingValue(
+      text: newText.toString(),
+      selection: TextSelection.collapsed(offset: selectionIndex),
+    );
+  }
+}
+
+class _PhoneNumberInputFormatter extends TextInputFormatter {
+  static final WhitelistingTextInputFormatter _formatter =
+      WhitelistingTextInputFormatter.digitsOnly;
+
+  @override
+  TextEditingValue formatEditUpdate(
+      TextEditingValue oldValue, TextEditingValue newValue) {
+    if (oldValue.text == newValue.text) {
+      return newValue;
+    }
+    newValue = _formatter.formatEditUpdate(oldValue, newValue);
+    final int newTextLength = newValue.text.length;
+    int selectionIndex = newValue.selection.end;
+    int usedSubstringIndex = 0;
+    final StringBuffer newText = StringBuffer();
+    /*  if (newTextLength >= 1) {
+      newText.write('(');
+      if (newValue.selection.end >= 1) selectionIndex++;
+    }*/
+    log.fine("newValue:'${newValue.text}', length=$newTextLength");
+    if (newTextLength >= 3) {
+      newText.write(newValue.text.substring(0, usedSubstringIndex = 2) + ' ');
+      if (newValue.selection.end >= 2) selectionIndex++;
+    }
+    if (newTextLength >= 6) {
+      newText.write(newValue.text.substring(3, usedSubstringIndex = 5) + ' ');
+      if (newValue.selection.end >= 6) selectionIndex++;
+    }
+    if (newTextLength >= 10) {
+      newText.write(newValue.text.substring(6, usedSubstringIndex = 9) + ' ');
+      if (newValue.selection.end >= 10) selectionIndex++;
+    }
+    // Dump the rest.
+    if (newTextLength >= usedSubstringIndex) {
+      newText.write(newValue.text.substring(usedSubstringIndex));
+    }
+    return TextEditingValue(
+      text: newText.toString(),
+      selection: TextSelection.collapsed(offset: selectionIndex),
+    );
   }
 }

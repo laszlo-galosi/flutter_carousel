@@ -210,6 +210,15 @@ class WidgetDemoTabViewModel extends Model {
     notifyListeners();
   }
 
+  TextAlign _textAlign = TextAlign.start;
+
+  TextAlign get textAlign => _textAlign;
+
+  set textAlign(TextAlign textAlign) {
+    _textAlign = textAlign;
+    notifyListeners();
+  }
+
   @override
   String toString() {
     return 'WidgetDemoTabViewModel{isAndroid: $isAndroid, isAdaptive: $isAdaptive, _switchValue: $_switchValue, _checkBoxValue: $_checkBoxValue, _dateTime: $_dateTime}';
@@ -227,13 +236,18 @@ class WidgetDemoTabPageState extends State<WidgetDemoTabPageWidget> {
 
   WidgetDemoTabViewModel _viewModel;
   WidgetDemoPageViewModel _pageViewModel;
+  FocusNode _focusNode;
 
   @override
   void initState() {
     super.initState();
+    initLogger("WidgetDemo");
     _scrollController.addListener(() {
       _pageViewModel?._sharedScrollPos = _scrollController.position.pixels;
     });
+    _focusNode = new FocusNode();
+    _focusNode.addListener(() => _viewModel.textAlign =
+        _focusNode.hasFocus ? TextAlign.start : TextAlign.end);
   }
 
   @override
@@ -405,6 +419,8 @@ class WidgetDemoTabPageState extends State<WidgetDemoTabPageWidget> {
             hintText: "Enter your full name",
             labelText: "Name",
           ),
+          textAlign: _viewModel.textAlign,
+          focusNode: _focusNode,
           autovalidate: true,
           validator: (value) {
             return value == null || value.isEmpty
