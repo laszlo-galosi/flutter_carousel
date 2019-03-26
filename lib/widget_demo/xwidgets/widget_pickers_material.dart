@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_carousel/globals.dart';
 import 'package:flutter_carousel/resources.dart' as res;
 import 'package:flutter_carousel/widget_demo/xwidgets/widget_adaptive.dart';
 import 'package:intl/intl.dart';
@@ -44,28 +47,40 @@ class MaterialPickerWidget extends StatelessWidget {
 }
 
 class MaterialDateTimePicker extends StatelessWidget {
-  const MaterialDateTimePicker(
-      {Key key,
-      this.mode = CupertinoDatePickerMode.date,
-      this.label,
-      this.value,
-      this.onDateTimeChanged,
-      this.valueFormat})
-      : super(key: key);
+  const MaterialDateTimePicker({
+    Key key,
+    this.mode = CupertinoDatePickerMode.date,
+    this.label,
+    this.value,
+    this.firstDate,
+    this.lastDate,
+    this.onDateTimeChanged,
+    this.valueFormat,
+    this.decoration,
+    this.valueStyle,
+    this.textAlign,
+    this.isEmpty,
+  }) : super(key: key);
 
   final CupertinoDatePickerMode mode;
   final String label;
   final DateTime value;
+  final DateTime firstDate;
+  final DateTime lastDate;
   final ValueChanged<DateTime> onDateTimeChanged;
   final ValueFormatter valueFormat;
+  final InputDecoration decoration;
+  final TextStyle valueStyle;
+  final TextAlign textAlign;
+  final bool isEmpty;
 
   Future<void> _selectDate(BuildContext context) async {
     final time = TimeOfDay.fromDateTime(value);
     final DateTime picked = await showDatePicker(
         context: context,
         initialDate: value,
-        firstDate: DateTime(2015, 8),
-        lastDate: DateTime(2101));
+        firstDate: this.firstDate ?? DateTime(2015, 8),
+        lastDate: this.lastDate ?? DateTime(2101));
     if (picked != null && picked != value)
       onDateTimeChanged(new DateTime(
           picked.year, picked.month, picked.day, time.hour, time.minute));
@@ -83,7 +98,6 @@ class MaterialDateTimePicker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final TextStyle valueStyle = res.textStylePicker;
     return Row(
       crossAxisAlignment: CrossAxisAlignment.end,
       children: <Widget>[
@@ -95,20 +109,25 @@ class MaterialDateTimePicker extends StatelessWidget {
                   valueText:
                       valueFormat(value) ?? DateFormat.yMMMMd().format(value),
                   valueStyle: valueStyle,
+                  textAlign: this.textAlign,
+                  isEmpty: isEmpty ?? value == null,
+                  decoration: this.decoration,
                   onPressed: () {
                     _selectDate(context);
                   },
                 )
               : Container(),
         ),
-        SizedBox(width: 12.0),
+        SizedBox(width: mode != CupertinoDatePickerMode.date ? 12.0 : 0.0),
         Expanded(
-          flex: 3,
+          flex: mode != CupertinoDatePickerMode.date ? 3 : 0,
           child: mode != CupertinoDatePickerMode.date
               ? InputDropdown(
                   valueText:
                       TimeOfDay.fromDateTime(value).format(context) ?? "",
-                  valueStyle: valueStyle,
+                  valueStyle: valueStyle ?? res.textStylePicker,
+                  textAlign: this.textAlign,
+                  decoration: this.decoration,
                   onPressed: () {
                     _selectTime(context);
                   },
@@ -121,44 +140,67 @@ class MaterialDateTimePicker extends StatelessWidget {
 }
 
 class InputDropdown extends StatelessWidget {
-  const InputDropdown(
-      {Key key,
-      this.child,
-      this.labelText,
-      this.valueText,
-      this.valueStyle,
-      this.onPressed})
-      : super(key: key);
+  const InputDropdown({
+    Key key,
+    this.icon,
+    this.labelText,
+    this.labelStyle,
+    this.hintText,
+    this.hintStyle,
+    this.valueText,
+    this.decoration,
+    this.textAlign,
+    this.valueStyle,
+    this.onPressed,
+    this.isEmpty,
+  }) : super(key: key);
 
   final String labelText;
+  final TextStyle labelStyle;
+  final String hintText;
+  final TextStyle hintStyle;
   final String valueText;
   final TextStyle valueStyle;
   final VoidCallback onPressed;
-  final Widget child;
+  final InputDecoration decoration;
+  final TextAlign textAlign;
+  final Widget icon;
+  final bool isEmpty;
 
   @override
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onPressed,
       child: InputDecorator(
-        decoration: InputDecoration(
-          labelText: labelText,
-          border: UnderlineInputBorder(
-              borderSide: BorderSide(
-            width: 1.0,
-            color: res.colorDivider,
-          )),
-        ),
+        isEmpty: isEmpty ?? true,
+        decoration: (decoration ??
+                InputDecoration(
+                  labelText: labelText,
+                  labelStyle: labelStyle,
+                  hintText: hintText,
+                  hintStyle: hintStyle,
+                  border: UnderlineInputBorder(
+                      borderSide: BorderSide(
+                    width: 1.0,
+                    color: res.colorDivider,
+                  )),
+                ))
+            .copyWith(hintText: null, labelText: null),
         baseStyle: valueStyle,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          mainAxisSize: MainAxisSize.min,
+        textAlign: textAlign ?? TextAlign.start,
+        child: Stack(
+//          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//          mainAxisSize: MainAxisSize.min,
           children: <Widget>[
-            Text(valueText, style: valueStyle),
-            Icon(Icons.arrow_drop_down,
-                color: Theme.of(context).brightness == Brightness.light
-                    ? Colors.grey.shade700
-                    : Colors.white70),
+            Container(
+              alignment: alignmentFor(textAlign),
+              child: Text(
+                valueText,
+                style: valueStyle,
+//                textAlign: textAlign ?? TextAlign.start,
+              ),
+            ),
+            Container(alignment: AlignmentDirectional.centerEnd, child: icon),
           ],
         ),
       ),

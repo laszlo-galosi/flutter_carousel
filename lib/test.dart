@@ -41,6 +41,7 @@ class HomePageState extends State<HomePage> {
   @override
   void dispose() {
     _focusNode.removeListener(_handleFocusChanged);
+    super.dispose();
   }
 
   @override

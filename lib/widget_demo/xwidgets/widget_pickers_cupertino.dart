@@ -65,6 +65,8 @@ class CupertinoDateTimePicker extends StatelessWidget {
   CupertinoDateTimePicker({
     Key key,
     @required this.value,
+    this.firstDate,
+    this.lastDate,
     @required this.onDateTimeChanged,
     this.mode,
     this.label,
@@ -74,6 +76,8 @@ class CupertinoDateTimePicker extends StatelessWidget {
   final CupertinoDatePickerMode mode;
   final ValueChanged<DateTime> onDateTimeChanged;
   final DateTime value;
+  final DateTime firstDate;
+  final DateTime lastDate;
   final ValueFormatter valueFormat;
   final String label;
 
@@ -87,6 +91,8 @@ class CupertinoDateTimePicker extends StatelessWidget {
                 return CupertinoBottomPicker(
                     picker: CupertinoDatePicker(
                         mode: mode ?? CupertinoDatePickerMode.date,
+                        minimumDate: this.firstDate ?? DateTime(2015, 8),
+                        maximumDate: this.lastDate ?? DateTime(2101),
                         initialDateTime: value,
                         onDateTimeChanged: onDateTimeChanged));
               });
@@ -94,7 +100,7 @@ class CupertinoDateTimePicker extends StatelessWidget {
         child: CupertinoListItem(children: [
           Text(label ?? 'Date'),
           Text(
-            valueFormat(value) ?? DateFormat.yMMMMd().format(value),
+            valueFormat(value) ?? DateFormat.yMd().format(value),
             style: const TextStyle(color: CupertinoColors.inactiveGray),
           )
         ]));
@@ -131,20 +137,22 @@ class CupertinoBottomPicker extends StatelessWidget {
 }
 
 class CupertinoListItem extends StatelessWidget {
-  CupertinoListItem({Key key, this.children});
+  CupertinoListItem({Key key, this.children, this.decoration});
 
   final List<Widget> children;
+  final BoxDecoration decoration;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: const BoxDecoration(
-        color: CupertinoColors.white,
-        border: Border(
-          top: BorderSide(color: Color(0xFFBCBBC1), width: 0.0),
-          bottom: BorderSide(color: Color(0xFFBCBBC1), width: 0.0),
-        ),
-      ),
+      decoration: decoration ??
+          const BoxDecoration(
+            color: CupertinoColors.white,
+            border: Border(
+              top: BorderSide(color: Color(0xFFBCBBC1), width: 0.0),
+              bottom: BorderSide(color: Color(0xFFBCBBC1), width: 0.0),
+            ),
+          ),
       height: 44.0,
       child: SafeArea(
         top: false,

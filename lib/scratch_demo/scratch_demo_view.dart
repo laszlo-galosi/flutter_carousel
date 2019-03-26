@@ -11,7 +11,7 @@ import 'package:sprintf/sprintf.dart';
 class ScratchDemoPageWidget extends StatefulWidget {
   ScratchDemoPageWidget({Key key, @required this.viewModel});
 
-  ScratchCardViewModel viewModel;
+  final ScratchCardViewModel viewModel;
 
   @override
   _ScratchDemoPageWidgetState createState() =>

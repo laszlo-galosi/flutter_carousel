@@ -3,6 +3,7 @@ import 'dart:io' show Platform;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_carousel/resources.dart' as res;
+import 'package:flutter_carousel/widget_demo/xwidgets/widget_adaptive_form.dart';
 import 'package:flutter_carousel/widget_demo/xwidgets/widget_pickers_cupertino.dart';
 import 'package:flutter_carousel/widget_demo/xwidgets/widget_pickers_material.dart';
 
@@ -97,7 +98,7 @@ mixin XFormFieldStateMixin<V, I extends Widget, A extends Widget,
   bool isPlatformFlipped() => false;
 }
 
-class XButton extends XStatelessWidget<CupertinoButton, MaterialButton> {
+class XButton extends XStatelessWidget<CupertinoButton, RaisedButton> {
   XButton(
       {Key key,
       @required this.child,
@@ -163,13 +164,114 @@ class XButton extends XStatelessWidget<CupertinoButton, MaterialButton> {
   }
 
   @override
-  MaterialButton createAndroidWidget(BuildContext context) {
-    return new MaterialButton(
+  RaisedButton createAndroidWidget(BuildContext context) {
+    return new RaisedButton(
       child: this.child,
       padding: this.padding,
       onPressed: enabled ? this.onPressed : null,
       color: this.color ?? Theme.of(context).accentColor,
-      disabledColor: this.disabledColor,
+      disabledColor: this.disabledColor ?? Theme.of(context).disabledColor,
+    );
+  }
+}
+
+class XFlatButton extends XStatelessWidget<CupertinoButton, FlatButton> {
+  XFlatButton(
+      {Key key,
+      this.child,
+      this.padding,
+      this.color = Colors.transparent,
+      this.label,
+      this.textStyle,
+      this.textColor,
+      this.disabledTextColor,
+      this.minSize = 44.0,
+      this.pressedOpacity = 0.9,
+      this.enabled = true,
+      @required this.onPressed})
+      : assert(label != null || child != null,
+            "Either label or child must be provided.");
+
+  /// The widget below this widget in the tree.
+  ///
+  /// Typically a [Text] widget.
+  final Widget child;
+
+  /// Defaults to 16.0 pixels.
+  final EdgeInsetsGeometry padding;
+
+  /// The color of the button's background.
+  final Color color;
+
+  /// The color of the button's background.
+  final Color textColor;
+
+  /// The color of the button's background when the button is disabled.
+  final Color disabledTextColor;
+
+  final String label;
+
+  //The textStyle of the [FlatButton],
+  final TextStyle textStyle;
+
+  /// The callback that is called when the button is tapped or otherwise activated.
+
+  final VoidCallback onPressed;
+
+  /// Minimum size of the button.
+  /// Defaults to 44.0 which the iOS Human Interface Guideline recommends as the
+  final double minSize;
+
+  /// The opacity that the button will fade to when it is pressed.
+  /// The button will have an opacity of 1.0 when it is not pressed.
+  ///
+  /// This defaults to 0.1. If null, opacity will not change on pressed if using
+  /// your own custom effects is desired.
+  final double pressedOpacity;
+
+  /// Whether the button is enabled or disabled. Buttons are disabled by default. To
+  /// enable a button, set its [onPressed] property to a non-null value.
+  final bool enabled;
+
+  @override
+  CupertinoButton createIosWidget(BuildContext context) {
+    return new CupertinoButton(
+      child: this.label != null
+          ? Text(this.label,
+              style: this.textStyle ??
+                  res.textStyleMenu.copyWith(
+                      color: enabled
+                          ? Theme.of(context).accentColor
+                          : this.disabledTextColor ??
+                              Theme.of(context).disabledColor))
+          : this.child,
+      padding: this.padding,
+      onPressed: enabled ? this.onPressed : null,
+      color: this.color ?? Theme.of(context).accentColor,
+      disabledColor: Colors.transparent,
+      minSize: this.minSize,
+      pressedOpacity: this.pressedOpacity,
+    );
+  }
+
+  @override
+  FlatButton createAndroidWidget(BuildContext context) {
+    return new FlatButton(
+      child: this.label != null
+          ? Text(this.label,
+              style: this.textStyle ??
+                  res.textStyleMenu.copyWith(
+                      color: enabled
+                          ? Theme.of(context).accentColor
+                          : this.disabledTextColor ??
+                              Theme.of(context).disabledColor))
+          : this.child,
+      padding: this.padding,
+      onPressed: enabled ? this.onPressed : null,
+      color: this.color ?? Colors.transparent,
+      textColor: this.textColor ?? Theme.of(context).accentColor,
+      disabledTextColor:
+          this.disabledTextColor ?? Theme.of(context).disabledColor,
     );
   }
 }
@@ -239,6 +341,8 @@ class XDateTimePicker
   XDateTimePicker({
     Key key,
     @required this.value,
+    this.firstDate,
+    this.lastDate,
     @required this.onDateTimeChanged,
     this.mode = CupertinoDatePickerMode.date,
     this.label,
@@ -249,6 +353,8 @@ class XDateTimePicker
   final CupertinoDatePickerMode mode;
   final ValueChanged<DateTime> onDateTimeChanged;
   final DateTime value;
+  final DateTime firstDate;
+  final DateTime lastDate;
   final ValueFormatter valueFormat;
   final String label;
   final WidgetBuilder widgetBuilder;
@@ -259,6 +365,8 @@ class XDateTimePicker
       key: this.key,
       mode: this.mode,
       value: this.value,
+      firstDate: this.firstDate,
+      lastDate: this.lastDate,
       onDateTimeChanged: this.onDateTimeChanged,
       label: this.label,
       valueFormat: this.valueFormat,
@@ -271,6 +379,8 @@ class XDateTimePicker
       key: this.key,
       mode: this.mode,
       value: this.value,
+      firstDate: this.firstDate,
+      lastDate: this.lastDate,
       onDateTimeChanged: this.onDateTimeChanged,
       label: this.label,
       valueFormat: this.valueFormat,
@@ -279,4 +389,134 @@ class XDateTimePicker
 
   @override
   WidgetBuilder customBuilder() => this.widgetBuilder;
+}
+
+class XProgressIndicator extends XStatelessWidget {
+  final Color backgroundColor;
+  final Animation<Color> valueColor;
+  final double strokeWidth;
+  XProgressIndicator(
+      {Key key, this.backgroundColor, this.valueColor, this.strokeWidth = 4.0});
+
+  @override
+  Widget createAndroidWidget(BuildContext context) {
+    return new CircularProgressIndicator(
+        key: key,
+        backgroundColor: backgroundColor,
+        valueColor: valueColor,
+        strokeWidth: strokeWidth);
+  }
+
+  @override
+  Widget createIosWidget(BuildContext context) {
+    return new CupertinoActivityIndicator(
+      key: key,
+//      animating: true,
+    );
+  }
+}
+
+class XAlertDialog extends XStatelessWidget {
+  XAlertDialog(
+      {Key key,
+      this.title = "Figyelem!",
+      this.message,
+      this.contentBuilder,
+      this.actions})
+      : assert(message != null || contentBuilder != null,
+            "Either a message or a dialog builder should be provided, to show in an AlertDialog.");
+
+  final String title;
+  final String message;
+  final WidgetBuilder contentBuilder;
+  final Map<String, VoidCallback> actions;
+
+  bool get isCupertino =>
+      Platform.isIOS || (Platform.isAndroid && isPlatformFlipped());
+
+  Map<String, VoidCallback> get dialogActions => actions ?? Map.of({});
+
+  @override
+  Widget build(BuildContext context) {
+    if (dialogActions.isEmpty) {
+      dialogActions.putIfAbsent(
+          "Ok", () => (() => Navigator.of(context).pop()));
+    }
+    return isCupertino
+        ? createIosWidget(context)
+        : createAndroidWidget(context);
+  }
+
+  @override
+  Widget createAndroidWidget(BuildContext context) {
+    return AlertDialog(
+        key: key,
+        title: new Text(title),
+        content: contentBuilder != null
+            ? contentBuilder(context)
+            : new Text(message, style: res.textStyleNormal),
+        actions: dialogActions.keys
+            .toList()
+            .map((key) => new XFlatButton(label: key, onPressed: actions[key]))
+            .toList());
+  }
+
+  @override
+  Widget createIosWidget(BuildContext context) {
+    return CupertinoAlertDialog(
+        key: key,
+        title: new Text(title),
+        content: contentBuilder != null
+            ? contentBuilder(context)
+            : Padding(
+                padding: const EdgeInsets.only(top: 8.0),
+                child: new Text(message),
+              ),
+        actions: dialogActions.keys
+            .toList()
+            .map((key) => new CupertinoDialogAction(
+                child: Text(key), onPressed: actions[key]))
+            .toList());
+  }
+}
+
+void makeDialog(
+  BuildContext context, {
+  String title,
+  String message,
+  bool isAlert = false,
+  bool flipPlatform,
+  GlobalKey<ScaffoldState> scaffoldKey,
+  WidgetBuilder builder,
+  Color backgroundColor = Colors.black,
+  Map<String, VoidCallback> actions,
+}) {
+  bool isIos = Platform.isIOS ||
+      (Platform.isAndroid && (flipPlatform ?? XTextEditField.platformFlipped));
+  if (actions == null) actions = Map.of({});
+  if (isAlert == false && isIos == false) {
+    if (actions.isEmpty) {
+      (actions ?? Map.of({})).putIfAbsent("Ok", () => (() => {}));
+    }
+    List<SnackBarAction> sactions = actions.keys
+        .toList()
+        .map((key) => new SnackBarAction(label: key, onPressed: actions[key]))
+        .toList();
+    scaffoldKey.currentState?.showSnackBar(new SnackBar(
+        backgroundColor: backgroundColor,
+        content: new Text(message,
+            style: res.textStyleLabel.copyWith(color: Colors.white)),
+        action: sactions[0]));
+  } else {
+    showDialog(
+        context: context,
+        builder: builder ??
+            (context) {
+              return XAlertDialog(
+                  title: title,
+                  contentBuilder: builder,
+                  message: message,
+                  actions: actions);
+            });
+  }
 }

@@ -1,5 +1,9 @@
+import 'dart:async';
+
+import 'package:flutter_carousel/globals.dart';
 import 'package:flutter_carousel/models/winner.dart';
 import 'package:flutter_carousel/services/napisorsjegy_api.dart';
+import 'package:logging/logging.dart';
 import 'package:meta/meta.dart';
 import 'package:scoped_model/scoped_model.dart';
 
@@ -12,17 +16,12 @@ class InfiniteListDemoViewModel extends Model {
   }
 
   final NapisorsjegyApi api;
+  static Logger _logger = newLogger("InfiniteListDemoViewModel");
 
   InfiniteListDemoViewModel({@required this.api});
 
-  Future<bool> setWinners({int offset = 0}) async {
-    winners = api?.getWinners(offset: offset);
-    print("$runtimeType: setWinners  offset: $offset");
-    return winners != null;
-  }
-
-  Future<List<Winner>> loadPage({int offset = 0}) async {
-    print("$runtimeType: loadPage offset: $offset");
-    return api?.getWinners(offset: offset);
+  Future<List<Winner>> loadPage({int page = 0, int limit = 10}) async {
+    _logger.fine("loadPage page: $page, limit: $limit");
+    return api?.getWinners(page: page, limit: limit);
   }
 }

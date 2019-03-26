@@ -22,43 +22,48 @@ class NavigationDrawerWidget extends StatelessWidget {
     final state = SharedDrawer.of(context);
 //    state.setDrawerControllerState(rootDrawerState);
     return Drawer(
-        child: ListView.builder(
-            padding: EdgeInsets.zero,
-            itemCount: state.itemCount + 1,
-            itemBuilder: (BuildContext ctx, int index) {
-              NavigationItem item = state.getItemAt(index - 1);
-              if (index == 0)
-                return _drawerHeader;
-              else
-                return new ListTile(
-                  title: new Text(item?.title ?? "Title is null.",
-                      style: res.textStyleMenu),
-                  leading: item?.icon ?? null,
-                  onTap: () {
-                    state.setSelectedItemIndex(index - 1);
-                    if (item.navigationCallback != null &&
-                        state.navigator != null) {
-                      item.navigationCallback(state, rootDrawerState);
-                    }
-                  },
-                );
-            }));
+      child: ListView.builder(
+          padding: EdgeInsets.zero,
+          itemCount: state.itemCount + 1,
+          itemBuilder: (BuildContext ctx, int index) {
+            NavigationItem item = state.getItemAt(index - 1);
+            if (index == 0)
+              return _drawerHeader(context);
+            else
+              return new ListTile(
+                title: new Text(item?.title ?? "Title is null.",
+                    style: res.textStyleMenu),
+                leading: item?.icon ?? null,
+                onTap: () {
+                  state.setSelectedItemIndex(index - 1);
+                  if (item.navigationCallback != null &&
+                      state.navigator != null) {
+                    item.navigationCallback(state, rootDrawerState);
+                  }
+                },
+              );
+          }),
+    );
   }
 
-  final Widget _drawerHeader = DrawerHeader(
-    padding: EdgeInsets.symmetric(horizontal: 8.0),
-    child: Container(
-      child: Row(children: <Widget>[
-        FlutterLogo(size: 48.0),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-          child: Text("Flutter Demo", style: res.textStyleTitleDark),
-        ),
-      ]),
-      height: 100.0,
-    ),
-    decoration: new BoxDecoration(color: Colors.indigo),
-  );
+  Widget _drawerHeader(BuildContext context) => Container(
+        padding: EdgeInsets.only(left: 8.0, right: 8.0, top: 16.0),
+        height: MediaQuery.of(context).padding.top + 56.0,
+        alignment: AlignmentDirectional.centerStart,
+        /*child: Container(*/
+        child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: <Widget>[
+              FlutterLogo(size: 32.0),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 32.0),
+                child: Text("Flutter Demo", style: res.textStyleTitleDark),
+              ),
+            ]),
+
+//    ),
+        decoration: new BoxDecoration(color: Colors.indigo),
+      );
 }
 
 class FadeInSlideOutRoute<T> extends MaterialPageRoute<T> {
@@ -87,7 +92,7 @@ Widget getPageForRouteName(String routeName) {
     case '/shopping':
       return ShoppingPageWidget();
     case '/widget_demo':
-      return new WidgetDemoPageWidget(viewModel: new WidgetDemoPageViewModel());
+      return new WidgetDemoPage(viewModel: new WidgetDemoPageViewModel());
     case "/scratch":
       return new ScratchDemoPageWidget(
         viewModel: new ScratchCardViewModel(),

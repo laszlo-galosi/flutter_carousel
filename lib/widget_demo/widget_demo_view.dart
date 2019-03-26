@@ -26,6 +26,8 @@ const Map<String, Color> coolColors = {
   "Lime": Colors.lime,
 };
 
+GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
+
 class WidgetDef extends StatelessWidget {
   WidgetDef({this.child, this.label, this.builder});
 
@@ -86,82 +88,87 @@ class WidgetDemoPageViewModel extends Model {
   }
 }
 
-class WidgetDemoPageWidget extends StatelessWidget {
-  WidgetDemoPageWidget({Key key, @required this.viewModel});
+class WidgetDemoPage extends StatelessWidget {
+  WidgetDemoPage({Key key, @required this.viewModel});
 
   final WidgetDemoPageViewModel viewModel;
 
+  @override
+  Widget build(BuildContext context) {
+    return new ScopedModel(model: viewModel, child: new WidgetDemoPageWidget());
+  }
+}
+
+class WidgetDemoPageWidget extends StatelessWidget {
   final iosIcon = Image.asset(
-    'images/iOS-logo.png',
+    'images/apple-logo.png',
     height: 24.0,
     color: Colors.white,
   );
 
   @override
   Widget build(BuildContext context) {
-    SharedDrawerState navState = SharedDrawer.of(context);
-    return new ScopedModel<WidgetDemoPageViewModel>(
-        model: viewModel,
-        child: new DefaultTabController(
-            length: 3,
-            child: new Scaffold(
-                //Need this to fix TextFormField keyboard overlapping widgets
-                // when using nested Scaffold.
-                resizeToAvoidBottomPadding: false,
-                appBar: AppBar(
-                    title: Text(navState.selectedItem?.title ?? "",
-                        style: res.textStyleTitleDark),
-                    leading: IconButton(
-                      icon: Icon(navState.shouldGoBack
-                          ? res.backIcon(context)
-                          : Icons.menu),
+    return new ScopedModelDescendant<WidgetDemoPageViewModel>(
+        builder: (context, _, model) {
+      SharedDrawerState navState = SharedDrawer.of(context);
+      return new DefaultTabController(
+          length: 3,
+          child: new Scaffold(
+              //Need this to fix TextFormField keyboard overlapping widgets
+              // when using nested Scaffold.
+              key: _scaffoldKey,
+              resizeToAvoidBottomPadding: false,
+              appBar: AppBar(
+                  title: Text(navState.selectedItem?.title ?? "",
+                      style: res.textStyleTitleDark),
+                  leading: IconButton(
+                    icon: Icon(navState.shouldGoBack
+                        ? res.backIcon(context)
+                        : Icons.menu),
+                    onPressed: () {
+                      if (navState.shouldGoBack) {
+                        navState.navigator.currentState.pop();
+                      } else {
+                        RootScaffold.openDrawer(context);
+                      }
+                    },
+                  ),
+                  actions: <Widget>[
+                    // action button
+                    IconButton(
+                      icon: Platform.isIOS ||
+                              (Platform.isAndroid && model.platformFlipped)
+                          ? Icon(Icons.android)
+                          : iosIcon,
                       onPressed: () {
-                        if (navState.shouldGoBack) {
-                          navState.navigator.currentState.pop();
-                        } else {
-                          RootScaffold.openDrawer(context);
-                        }
+                        model.platformFlipped = !model.platformFlipped;
                       },
-                    ),
-                    /*actions: <Widget>[
-                      // action button
-                      IconButton(
-                        icon: Platform.isAndroid
-                            ? (viewModel.platformFlipped
-                                ? Icon(Icons.android)
-                                : iosIcon)
-                            : (viewModel.platformFlipped
-                                ? iosIcon
-                                : Icon(Icons.android)),
-                        onPressed: () {
-                          viewModel.platformFlipped =
-                              !viewModel._platformFlipped;
-                        },
-                      )
-                    ],*/
-                    bottom: TabBar(
-                      tabs: [
-                        Tab(text: "Material"),
-                        Tab(text: "Cupertino"),
-                        Tab(text: "Adaptive"),
-                      ],
-                    )),
-                body: TabBarView(
-                  children: [
-                    new ScopedModel<WidgetDemoTabViewModel>(
-                      model: new WidgetDemoTabViewModel(isAndroid: true),
-                      child: new WidgetDemoTabPageWidget(),
-                    ),
-                    new ScopedModel<WidgetDemoTabViewModel>(
-                      model: new WidgetDemoTabViewModel(isAndroid: false),
-                      child: new WidgetDemoTabPageWidget(),
-                    ),
-                    new ScopedModel<WidgetDemoTabViewModel>(
-                        model: new WidgetDemoTabViewModel(
-                            isAdaptive: true, isAndroid: !Platform.isIOS),
-                        child: new WidgetDemoTabPageWidget()),
+                    )
                   ],
-                ))));
+                  bottom: TabBar(
+                    tabs: [
+                      Tab(text: "Material"),
+                      Tab(text: "Cupertino"),
+                      Tab(text: "Adaptive"),
+                    ],
+                  )),
+              body: TabBarView(
+                children: [
+                  new ScopedModel<WidgetDemoTabViewModel>(
+                    model: new WidgetDemoTabViewModel(isAndroid: true),
+                    child: new WidgetDemoTabPageWidget(),
+                  ),
+                  new ScopedModel<WidgetDemoTabViewModel>(
+                    model: new WidgetDemoTabViewModel(isAndroid: false),
+                    child: new WidgetDemoTabPageWidget(),
+                  ),
+                  new ScopedModel<WidgetDemoTabViewModel>(
+                      model: new WidgetDemoTabViewModel(
+                          isAdaptive: true, isAndroid: !Platform.isIOS),
+                      child: new WidgetDemoTabPageWidget()),
+                ],
+              )));
+    });
   }
 }
 
@@ -301,14 +308,23 @@ class WidgetDemoTabPageState extends State<WidgetDemoTabPageWidget> {
               padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
               child: new Text(
                   _viewModel.isAdaptive
-                      ? widgetMap["Button"]?.runtimeType.toString() ?? label
+                      ? '${widgetMap["Button"]?.runtimeType.toString()} ${_viewModel.isAdaptive ? '(*Enabled with the Switch)' : ''}' ??
+                          label
                       : label,
                   style: res.textStyleLabel)),
           matchParent(widgetMap["Button"]),
         ]);
       }),
+      _buildWidgetDef(
+        "FlatButton",
+        context,
+        label:
+            "${widgetMap["FlatButton"].runtimeType} ${_viewModel.isAdaptive ? '(*Enabled with the Switch below)' : ''}",
+        children: [widgetMap["FlatButton"]],
+      ),
       _buildWidgetDef("Switch", context,
-          label: _viewModel.isAndroid ? "Switch" : "CupertinoSwitch",
+          label:
+              '${_viewModel.isAndroid ? "Switch" : "CupertinoSwitch"} ${_viewModel.isAdaptive ? '(*Enables buttons above)' : ''}',
           children: <Widget>[
             widgetMap["Switch"],
             Text(
@@ -323,6 +339,25 @@ class WidgetDemoTabPageState extends State<WidgetDemoTabPageWidget> {
                     "This is a Checkbox ${_viewModel.checkBoxValue ? "checked" : "unchecked"}")
                 : new Container())
           ]),
+      _buildWidgetDef(
+        "ProgressIndicator",
+        context,
+        label: widgetMap["ProgressIndicator"].runtimeType.toString(),
+        children: [widgetMap["ProgressIndicator"]],
+      ),
+      _buildWidgetDef(
+        "MessageDialog",
+        context,
+        label:
+            'XAlertDialog ${_viewModel.isAndroid && !XTextEditField.platformFlipped ? '(Snackbar)' : '(Alert Dialog)'}',
+        children: [widgetMap["MessageDialog"]],
+      ),
+      _buildWidgetDef(
+        "AlertDialog",
+        context,
+        label: 'XAlertDialog',
+        children: [widgetMap["AlertDialog"]],
+      ),
     ];
   }
 
@@ -357,6 +392,10 @@ class WidgetDemoTabPageState extends State<WidgetDemoTabPageWidget> {
         "Button": new MaterialButton(
             color: Colors.indigoAccent,
             child: Text("Button", style: res.textStyleNormalDark),
+            onPressed: () {}),
+        "FlatButton": new FlatButton(
+            child: Text("FlatButton"),
+            textColor: Theme.of(context).accentColor,
             onPressed: () {}),
         "Switch": new Switch(
             value: _viewModel.switchValue,
@@ -428,12 +467,23 @@ class WidgetDemoTabPageState extends State<WidgetDemoTabPageWidget> {
                 : null;
           },
         ),
+        'ProgressIndicator': new CircularProgressIndicator()
       };
 
   Map<String, Widget> _cupertinoWidgets() => {
         "Button": new CupertinoButton(
             color: Colors.indigoAccent,
             child: Text("Button", style: res.textStyleNormalDark),
+            onPressed: () {}),
+        "FlatButton": new CupertinoButton(
+            color: Colors.transparent,
+            pressedOpacity: 0.1,
+            child: Text("FlatButton",
+                style: new TextStyle(
+                  color: Theme.of(context).accentColor,
+                  fontSize: 16.0,
+                  fontWeight: FontWeight.w600,
+                )),
             onPressed: () {}),
         "Switch": new CupertinoSwitch(
             value: _viewModel.switchValue,
@@ -488,6 +538,7 @@ class WidgetDemoTabPageState extends State<WidgetDemoTabPageWidget> {
           placeholder: "Enter your full name.",
           prefix: Text("Name"),
         ),
+        'ProgressIndicator': new CupertinoActivityIndicator(),
       };
 
   Map<String, Widget> _adaptiveWidgets() => {
@@ -536,9 +587,17 @@ class WidgetDemoTabPageState extends State<WidgetDemoTabPageWidget> {
 //          widgetBuilder: (context) => _cupertinoWidgets()["Picker"],
         ),
         "Button": new XButton(
-            color: Colors.indigoAccent,
+            color: _viewModel.switchValue
+                ? Colors.indigoAccent
+                : Theme.of(context).accentColor,
+            enabled: _viewModel.switchValue,
             child: Text("Button", style: res.textStyleNormalDark),
             onPressed: () {}),
+        "FlatButton": new XFlatButton(
+          label: "FlatButton",
+          onPressed: () {},
+          enabled: _viewModel.switchValue,
+        ),
         "TextFormField": new XTextEditField(
             fieldModel: new XFormFieldModel(
           hintText: "Enter your full name.",
@@ -550,6 +609,24 @@ class WidgetDemoTabPageState extends State<WidgetDemoTabPageWidget> {
                 : null;
           },
         )),
+        'ProgressIndicator': new XProgressIndicator(),
+        'MessageDialog': XFlatButton(
+            label: 'Show message',
+            onPressed: () => makeDialog(
+                  context,
+                  title: 'Warning!',
+                  message:
+                      'This is a ${_viewModel.isAndroid && !XTextEditField.platformFlipped ? 'Snackbar' : 'AlertDialog'}  message',
+                  scaffoldKey: _scaffoldKey,
+                )),
+        'AlertDialog': XFlatButton(
+            label: 'Show alert',
+            onPressed: () => makeDialog(
+                  context,
+                  isAlert: true,
+                  title: 'Warning!',
+                  message: 'This is an AlertDialog message',
+                )),
       };
 
   Map<Color, String> colorNames() => coolColors.map((k, v) => MapEntry(v, k));

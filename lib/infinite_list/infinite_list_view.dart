@@ -1,10 +1,13 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_carousel/globals.dart';
 import 'package:flutter_carousel/infinite_list/infinite_list_demo_view_model.dart';
 import 'package:flutter_carousel/infinite_list/message_view.dart';
 import 'package:flutter_carousel/models/winner.dart';
 import 'package:flutter_carousel/navigation/navigation_view_model.dart';
 import 'package:flutter_carousel/resources.dart' as res;
+import 'package:flutter_carousel/widget_demo/xwidgets/widget_adaptive.dart';
+import 'package:logging/logging.dart';
 import 'package:scoped_model/scoped_model.dart';
 
 class InfiniteListDemoPageWidget extends StatefulWidget {
@@ -33,6 +36,7 @@ class _InfiniteListDemoPageWidgetState extends State<InfiniteListDemoPageWidget>
   @override
   void initState() {
     super.initState();
+    initLogger("_InfiniteListDemoPageWidgetState");
     //_loadData();
   }
 
@@ -71,12 +75,16 @@ class WinnerListWidget extends StatefulWidget {
 class WinnerListWidgetState extends State<WinnerListWidget> {
   ScrollController _scrollController = new ScrollController();
 
-  int _currentOffset = 0;
+  int _currentPage = 0;
   int _pageSize = 10;
+  int _lastResultSize = -1;
 
   bool _isLoading = false;
 
   List<Winner> _items = [];
+  List<Winner> _snapshot = [];
+
+  static final Logger _logger = newLogger("WinnerListWidgetState");
 
   @override
   void initState() {
@@ -90,20 +98,21 @@ class WinnerListWidgetState extends State<WinnerListWidget> {
   }
 
   void _loadMore() async {
-    if (!_isLoading) {
+    if (!_isLoading && _lastResultSize > 0) {
       setState(() {
         _isLoading = true;
-        _currentOffset += _pageSize;
+        _currentPage++;
       });
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    _logger.fine("build items ${_items.length}");
     return ScopedModelDescendant<InfiniteListDemoViewModel>(
         builder: (context, child, model) {
       return FutureBuilder<List<Winner>>(
-          future: model.loadPage(offset: _currentOffset),
+          future: model.loadPage(page: _currentPage, limit: _pageSize),
           builder: (_, AsyncSnapshot snapshot) {
             if (snapshot.hasError) {
               return ErrorPageWidget(
@@ -111,25 +120,34 @@ class WinnerListWidgetState extends State<WinnerListWidget> {
                     style: res.textStyleNormal),
                 action: () async {
                   setState(() {
-                    _currentOffset = 0;
+                    _currentPage = 0;
                     _isLoading = true;
                   });
                 },
               );
             } else if (snapshot.hasData && snapshot.data != null) {
+              _lastResultSize = snapshot.data.length;
               if (snapshot.data.isEmpty) {
-                double edge = 50.0;
                 double offsetFromBottom =
                     _scrollController.position.maxScrollExtent -
                         _scrollController.position.pixels;
+                _logger.fine("offsetFromBottom: $offsetFromBottom");
+                double edge = 50.0;
                 if (offsetFromBottom < edge) {
                   _scrollController.animateTo(
                       _scrollController.offset - (edge - offsetFromBottom),
                       duration: new Duration(milliseconds: 500),
                       curve: Curves.easeOut);
                 }
+              } else {
+                _logger.fine(() =>
+                    "\n${snapshot.data.map((w) => "${w.toString()}").join('\n')}");
+                _items.addAll(snapshot.data);
+                (snapshot.data as List<Winner>).clear();
+                _logger.fine("snapshot data length $_lastResultSize");
+                _logger.finer(() =>
+                    "\n${_snapshot.map((w) => "${_items.indexOf(w)}. ${w.toString()}").join('\n')}");
               }
-              _items.addAll(snapshot.data);
             }
             if (_items.isEmpty) {
               return ErrorPageWidget(
@@ -155,7 +173,7 @@ class WinnerListWidgetState extends State<WinnerListWidget> {
                     child: new Center(
                       child: new Opacity(
                         opacity: _isLoading ? 1.0 : 0.0,
-                        child: new CircularProgressIndicator(),
+                        child: new XProgressIndicator(),
                       ),
                     ),
                   );
@@ -199,7 +217,8 @@ class WinnerListItemWidget extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 8.0),
                 child: Column(
                   children: [
-                    Text(winner.name ?? "", style: res.textStyleNormal),
+                    Text("${winner.id} - ${winner.name ?? ""}",
+                        style: res.textStyleNormal),
                     Text(winner.prizeName ?? "", style: res.textStyleMenu),
                     Text(winner.date ?? "", style: res.textStyleLabel),
                   ],

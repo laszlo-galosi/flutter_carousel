@@ -7,7 +7,7 @@ import 'package:scoped_model/scoped_model.dart';
 class FormDemoViewModel extends Model {
   FormDemoViewModel();
 
-  final Map<String, GlobalKey<XTextEditFieldState>> _keyMap = Map.fromIterable([
+  final Map<String, GlobalKey<dynamic>> _keyMap = Map.fromIterable([
     "Name",
     "Email",
     "Password",
@@ -15,12 +15,20 @@ class FormDemoViewModel extends Model {
     "Phone",
     "Telefon",
     "Salary",
+    "BirthDate",
     "About",
   ],
       key: (name) => name,
-      value: (name) => new GlobalKey<XTextEditFieldState>(debugLabel: name));
+      value: (name) {
+        switch (name) {
+          case "BirthDate":
+            return new GlobalKey<XDatePickerFieldState>(debugLabel: name);
+          default:
+            return new GlobalKey<XTextEditFieldState>(debugLabel: name);
+        }
+      });
 
-  Map<String, GlobalKey<XTextEditFieldState>> get keyMap => _keyMap;
+  Map<String, GlobalKey<dynamic>> get keyMap => _keyMap;
 
   String _name;
 
@@ -49,7 +57,7 @@ class FormDemoViewModel extends Model {
     notifyListeners();
   }
 
-  String _phone = null;
+  String _phone;
 
   String get phone => _phone;
 
@@ -94,7 +102,9 @@ class FormDemoViewModel extends Model {
     notifyListeners();
   }
 
-  DateTime _birthDate = DateTime.now();
+  DateTime _birthDate;
+
+  static DateTime defaultBirthDate = new DateTime(1980);
 
   DateTime get birthDate => _birthDate;
 

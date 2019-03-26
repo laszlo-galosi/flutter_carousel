@@ -11,6 +11,7 @@ import 'package:flutter_carousel/resources.dart' as res;
 import 'package:flutter_carousel/widget_demo/xwidgets/widget_adaptive.dart';
 import 'package:flutter_carousel/widget_demo/xwidgets/widget_adaptive_form.dart';
 import 'package:intl/intl.dart';
+import 'package:logging/logging.dart';
 import 'package:scoped_model/scoped_model.dart';
 
 const String EMAIL_PATTERN =
@@ -49,12 +50,11 @@ class _FormWidgetState extends State<FormWidget> {
 
   bool _autovalidate = false;
 
-  bool _formWasEdited = false;
+  static final _logger = newLogger("FormDemoPage");
 
   @override
   void initState() {
     super.initState();
-    initLogger("FormDemoPage");
     _scrollController.addListener(() {});
   }
 
@@ -293,6 +293,59 @@ class _FormWidgetState extends State<FormWidget> {
                           focusNode: _focusNodeBy("About"),
                           textInputAction: TextInputAction.newline)),
                   const SizedBox(height: 24.0),
+                  XDatePickerField(
+                      key: _viewModel.keyMap["BirthDate"],
+                      fieldModel: new XDatePickerFieldModel(
+                          mode: CupertinoDatePickerMode.date,
+                          labelText: "Date of birth",
+                          hintText: "mm/dd/yyyy",
+                          value: _viewModel.birthDate,
+                          firstDate: new DateTime(1900),
+                          lastDate: DateTime.now(),
+                          initialDate: new DateTime(1980),
+                          valueFormat: (val) => val == null
+                              ? "mm/dd/yyyy"
+                              : DateFormat.yMd().format(val),
+                          valueStyle: (val) => val == null
+                              ? res.textStylePicker.copyWith(color: Colors.grey)
+                              : res.textStylePicker,
+                          textAlign: TextAlign.start,
+                          /*decoration: InputDecoration(
+//                              hintStyle: textStyleLabel.copyWith(
+//                                  color: Colors.black54),
+//                              labelStyle: textStyleLabel,
+                              labelText: "Date of birth",
+                              hintText: "mm/dd/yyyy",
+                              contentPadding: EdgeInsets.fromLTRB(9, 8, 9, 4),
+                              errorMaxLines: 2,
+                              hintMaxLines: 1,
+//                              alignLabelWithHint: true,
+                              errorStyle: textStyleError.copyWith(
+                                  color: Colors.deepOrange, fontSize: 14.0),
+                              border: UnderlineInputBorder(
+                                  borderRadius: BorderRadius.circular(4)),
+                              enabledBorder: UnderlineInputBorder(
+                                  borderSide: BorderSide(color: Colors.indigo)),
+                              errorBorder: UnderlineInputBorder(
+                                  borderSide:
+                                      BorderSide(color: Colors.redAccent)),
+                              fillColor: Colors.white70,
+                              filled: true,
+                              focusedBorder: UnderlineInputBorder(
+                                  borderSide:
+                                      BorderSide(color: Colors.indigoAccent))),*/
+                          onDateTimeChanged: (date) =>
+                              _viewModel.birthDate = date,
+                          dateTimeValidator: (date) {
+                            var error = date == null ||
+                                    date == FormDemoViewModel.defaultBirthDate
+                                ? "Birth date cannot be empty."
+                                : null;
+                            _logger.fine(
+                                "validateBirthDate $date, ${_viewModel.birthDate} error: $error");
+                            return error;
+                          })),
+                  const SizedBox(height: 24.0),
                   new XButton(
                       color: Colors.indigoAccent,
                       child: Text("Register", style: res.textStyleNormalDark),
@@ -318,50 +371,46 @@ class _FormWidgetState extends State<FormWidget> {
     if (!form.validate()) {
       _autovalidate = true; // Start validating on every change.
       showMessage("Please fix the errors in red before submitting.");
-      log.fine('Please fix the errors in red before submitting.');
+      _logger.fine('Please fix the errors in red before submitting.');
     } else {
       form.save();
       showMessage("Form validation success.");
-      log.fine("Validation success. $_viewModel");
+      _logger.fine("Validation success. $_viewModel");
     }
   }
 
   String _validateName(String value) {
-    _formWasEdited = true;
-    log.shout("validateName '$value'");
+    _logger.shout("validateName '$value'");
     if (value == null || value.isEmpty) return 'Name is required.';
     final RegExp exp = RegExp(r'^[A-Za-z ]+$');
-    log.fine("matches $exp: ${exp.hasMatch(value)}");
+    _logger.fine("matches $exp: ${exp.hasMatch(value)}");
     if (!exp.hasMatch(value))
       return 'Please enter only alphabetical characters.';
     return null;
   }
 
   String _validateEmail(String value) {
-    _formWasEdited = true;
-    log.fine("validateEmail '$value'");
+    _logger.fine("validateEmail '$value'");
     if (value == null || value.isEmpty) return 'Email is required.';
     final RegExp exp = RegExp(EMAIL_PATTERN);
-    log.fine("matches $exp: ${exp.hasMatch(value)}");
+    _logger.fine("matches $exp: ${exp.hasMatch(value)}");
     if (!exp.hasMatch(value)) return 'Invalid email address';
     return null;
   }
 
   String _validatePassword(String value) {
-    _formWasEdited = true;
-    log.fine("validatePassword '$value'");
+    _logger.fine("validatePassword '$value'");
     if (value == null || value.isEmpty) return 'Password is required.';
     final RegExp exp =
         RegExp(r'^.*(?=.{6,})(?=.*[A-Z])(?=.*[0-9])[a-zA-Z0-9]+$');
-    log.fine("matches $exp: ${exp.hasMatch(value)}");
+    _logger.fine("matches $exp: ${exp.hasMatch(value)}");
     if (!exp.hasMatch(value))
       return 'Password must contain at least 6 characthers,  an upper case character and a number.';
     return null;
   }
 
   String _validateAmount(String value) {
-    _formWasEdited = true;
-    log.fine("validateAmount '$value'");
+    _logger.fine("validateAmount '$value'");
     if (value == null || value.isEmpty) return 'Salary is required.';
     final formatter = new NumberFormat("###,###.###", "hu-HU");
     try {
@@ -369,7 +418,7 @@ class _FormWidgetState extends State<FormWidget> {
         return "Salary must be greater than 0.";
       }
     } catch (FormatException) {
-      log.fine("Parsing error: $FormatException");
+      _logger.fine("Parsing error: $FormatException");
       return "Invalid salary";
     }
     return null;
@@ -458,6 +507,7 @@ class _UsNumberTextInputFormatter extends TextInputFormatter {
 class _PhoneNumberInputFormatter extends TextInputFormatter {
   static final WhitelistingTextInputFormatter _formatter =
       WhitelistingTextInputFormatter.digitsOnly;
+  static final Logger _logger = newLogger("_PhoneNumberInputFormatter");
 
   @override
   TextEditingValue formatEditUpdate(
@@ -474,7 +524,7 @@ class _PhoneNumberInputFormatter extends TextInputFormatter {
       newText.write('(');
       if (newValue.selection.end >= 1) selectionIndex++;
     }*/
-    log.fine("newValue:'${newValue.text}', length=$newTextLength");
+    _logger.fine("newValue:'${newValue.text}', length=$newTextLength");
     if (newTextLength >= 3) {
       newText.write(newValue.text.substring(0, usedSubstringIndex = 2) + ' ');
       if (newValue.selection.end >= 2) selectionIndex++;

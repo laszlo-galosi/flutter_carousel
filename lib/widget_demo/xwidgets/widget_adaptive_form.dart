@@ -1,7 +1,15 @@
+import 'dart:async';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_carousel/globals.dart';
+import 'package:flutter_carousel/resources.dart';
 import 'package:flutter_carousel/widget_demo/xwidgets/widget_adaptive.dart';
+import 'package:flutter_carousel/widget_demo/xwidgets/widget_pickers_cupertino.dart';
+import 'package:flutter_carousel/widget_demo/xwidgets/widget_pickers_material.dart';
+import 'package:intl/intl.dart';
+import 'package:logging/logging.dart';
 
 // Default iOS style from HIG specs with larger font.
 const TextStyle kDefaultTextStyle = TextStyle(
@@ -397,15 +405,12 @@ class XTextEditField extends FormField<String> {
             enabled: fieldModel.enabled,
             builder: (field) {});
 
-  XFormFieldModel fieldModel;
+  final XFormFieldModel fieldModel;
 
   @override
   XTextEditFieldState createState() => XTextEditFieldState();
 
   static bool platformFlipped = false;
-
-  @override
-  bool isPlatformFlipped() => XTextEditField.platformFlipped;
 }
 
 class XTextEditFieldState extends FormFieldState<String>
@@ -415,9 +420,6 @@ class XTextEditFieldState extends FormFieldState<String>
   XTextEditFieldState({this.widgetBuilder});
 
   final FormFieldBuilder<String> widgetBuilder;
-
-  @override
-  FormFieldBuilder<String> customBuilder() => this.widgetBuilder;
 
   @override
   XTextEditField get widget => super.widget as XTextEditField;
@@ -593,12 +595,12 @@ class XPasswordField extends XTextEditField {
   final bool showRevealIcon;
 
   @override
-  _XPasswordFieldState createState() =>
-      _XPasswordFieldState(showRevealIcon: this.showRevealIcon);
+  XPasswordFieldState createState() =>
+      XPasswordFieldState(showRevealIcon: this.showRevealIcon);
 }
 
-class _XPasswordFieldState extends XTextEditFieldState {
-  _XPasswordFieldState({@required this.showRevealIcon});
+class XPasswordFieldState extends XTextEditFieldState {
+  XPasswordFieldState({@required this.showRevealIcon});
 
   bool _obscureText = true;
   final bool showRevealIcon;
@@ -606,28 +608,33 @@ class _XPasswordFieldState extends XTextEditFieldState {
   @override
   XFormFieldModel get model => widget.fieldModel;
 
+  InputDecoration get decoration =>
+      (model.decoration ?? model.effectiveDecoration(context))
+          .copyWith(errorText: this.errorText);
+
   @override
   TextField createAndroidWidget(FormFieldState<String> field) {
     var theme = Theme.of(context);
     final XTextEditFieldState state = field as XTextEditFieldState;
     return new TextField(
-      decoration: model.effectiveDecoration(context).copyWith(
-            errorText: field.errorText,
-            suffixIcon: this.showRevealIcon
-                ? GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        _obscureText = !_obscureText;
-                      });
-                    },
-                    child: Icon(
-                      _obscureText ? Icons.visibility : Icons.visibility_off,
-                      semanticLabel:
-                          _obscureText ? 'show password' : 'hide password',
-                    ),
-                  )
-                : null,
-          ),
+      decoration: decoration.copyWith(
+        errorText: field.errorText,
+        suffixIcon: this.showRevealIcon
+            ? GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _obscureText = !_obscureText;
+                  });
+                },
+                child: Icon(
+                  _obscureText ? Icons.visibility : Icons.visibility_off,
+                  semanticLabel:
+                      _obscureText ? 'show password' : 'hide password',
+//                      size: 18.0,
+                ),
+              )
+            : null,
+      ),
       style: model.inputStyle ?? theme.textTheme.subhead,
       textAlign: model.focusNode?.hasFocus ?? false
           ? model.focusedTextAlign
@@ -653,12 +660,10 @@ class _XPasswordFieldState extends XTextEditFieldState {
   }
 
   @override
-  createIosWidget(FormFieldState<String> field) {
+  InputDecorator createIosWidget(FormFieldState<String> field) {
     final XTextEditFieldState state = field as XTextEditFieldState;
     return InputDecorator(
-        decoration: model
-            .effectiveDecoration(context)
-            .copyWith(errorText: field.errorText),
+        decoration: decoration,
         child: new CupertinoTextField(
           placeholder: model.hintText,
           prefix: model.labelText != null
@@ -702,4 +707,237 @@ class _XPasswordFieldState extends XTextEditFieldState {
           enabled: model.enabled,
         ));
   }
+}
+
+typedef EmptyEvaluate = bool Function(dynamic);
+typedef TextStyleEvaluate = TextStyle Function(dynamic);
+
+class XDatePickerFieldModel extends XFormFieldModel {
+  final CupertinoDatePickerMode mode;
+  final ValueChanged<DateTime> onDateTimeChanged;
+  final DateTime value;
+  final DateTime firstDate;
+  final DateTime lastDate;
+  final DateTime initialDate;
+  final ValueFormatter valueFormat;
+  final TextStyleEvaluate valueStyle;
+  final FormFieldValidator<DateTime> dateTimeValidator;
+  final Widget dropDownIcon;
+
+  XDatePickerFieldModel({
+    this.mode,
+    this.onDateTimeChanged,
+    this.value,
+    this.firstDate,
+    this.lastDate,
+    this.initialDate,
+    this.valueFormat,
+    this.valueStyle,
+    this.dateTimeValidator,
+    this.dropDownIcon,
+    bool autovalidate = false,
+    ValueChanged<String> onFieldSubmitted,
+    TextAlign focusedTextAlign = TextAlign.start,
+    String labelText,
+    TextStyle labelStyle,
+    String hintText,
+    TextStyle hintStyle,
+    TextAlign textAlign,
+    InputDecoration decoration,
+    bool enabled = true,
+    Widget prefix,
+    OverlayVisibilityMode prefixMode = OverlayVisibilityMode.always,
+    Widget suffix,
+    OverlayVisibilityMode suffixMode = OverlayVisibilityMode.always,
+  }) : super(
+          autovalidate: autovalidate,
+          onFieldSubmitted: onFieldSubmitted,
+          focusedTextAlign: textAlign,
+          labelText: labelText,
+          labelStyle: labelStyle,
+          hintText: hintText,
+          hintStyle: hintStyle,
+          enabled: enabled,
+          prefix: prefix,
+          prefixMode: prefixMode,
+          suffix: suffix,
+          suffixMode: suffixMode,
+          decoration: decoration,
+        );
+}
+
+class XDatePickerField extends FormField<DateTime> {
+  final XDatePickerFieldModel fieldModel;
+
+  XDatePickerField({Key key, @required this.fieldModel})
+      : super(
+            key: key,
+            initialValue: fieldModel.value,
+            onSaved: fieldModel.onDateTimeChanged,
+            validator: fieldModel.dateTimeValidator,
+            autovalidate: fieldModel.autovalidate,
+            enabled: fieldModel.enabled,
+            builder: (field) {});
+
+  @override
+  XDatePickerFieldState createState() => XDatePickerFieldState();
+}
+
+class XDatePickerFieldState extends FormFieldState<DateTime>
+    with XFormFieldStateMixin<DateTime, Widget, Widget, XDatePickerField> {
+  XDatePickerFieldState();
+
+  Logger _logger = newLogger('XDatePickerFieldState');
+
+  @override
+  XDatePickerField get widget => super.widget as XDatePickerField;
+
+  XDatePickerFieldModel get model => widget.fieldModel;
+
+  @override
+  void didChange(DateTime value) {
+    super.didChange(value);
+    _logger.fine("didChange $value");
+    (widget.key as GlobalKey<XDatePickerFieldState>).currentState.validate();
+  }
+
+  bool get isEmpty =>
+      value == null /*|| value == model.initialDate ?? model.firstDate*/;
+
+  DateTime get safeValue => value ?? model.initialDate;
+
+  InputDecoration get decoration =>
+      (model.decoration ?? model.effectiveDecoration(context))
+          .copyWith(errorText: this.errorText);
+
+  Future<void> _selectDate(BuildContext context) async {
+    final time = TimeOfDay.fromDateTime(safeValue);
+    final DateTime picked = await showDatePicker(
+        context: context,
+        initialDate: safeValue,
+        firstDate: model.firstDate ?? DateTime(2015, 8),
+        lastDate: model.lastDate ?? DateTime(2101));
+    if (picked != null && picked != value) {
+      final newValue = new DateTime(
+          picked.year, picked.month, picked.day, time.hour, time.minute);
+      didChange(newValue);
+      model.onDateTimeChanged(newValue);
+    }
+  }
+
+  Future<void> _selectTime(BuildContext context) async {
+    final time = TimeOfDay.fromDateTime(safeValue);
+    final TimeOfDay picked =
+        await showTimePicker(context: context, initialTime: time);
+    if (picked != null && picked != time) {
+      final newValue = new DateTime(safeValue.year, safeValue.month,
+          safeValue.day, picked.hour, picked.minute);
+      didChange(newValue);
+      model.onDateTimeChanged(newValue);
+    }
+  }
+
+  Widget get defaultDropDownIcon => Icon(Icons.arrow_drop_down,
+      color: Theme.of(context).brightness == Brightness.light
+          ? Colors.grey.shade700
+          : Colors.white70);
+
+  @override
+  Widget createAndroidWidget(FormFieldState<DateTime> field) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: <Widget>[
+        Expanded(
+          flex: model.mode != CupertinoDatePickerMode.time ? 5 : 0,
+          child: model.mode != CupertinoDatePickerMode.time
+              ? InputDropdown(
+                  labelText: model.labelText ?? model.decoration?.labelText,
+                  labelStyle: model.labelStyle ?? model.decoration?.labelStyle,
+                  hintText: model.hintText,
+                  hintStyle: model.hintStyle,
+                  valueText: model.valueFormat != null
+                      ? model.valueFormat(value)
+                      : DateFormat.yMMMMd().format(value),
+                  valueStyle: model.valueStyle(value),
+                  textAlign: model.focusedTextAlign,
+                  icon: model.dropDownIcon ?? defaultDropDownIcon,
+                  isEmpty: isEmpty,
+                  decoration: decoration,
+                  onPressed: () {
+                    _selectDate(context);
+                  },
+                )
+              : Container(),
+        ),
+        SizedBox(
+            width:
+                model.mode == CupertinoDatePickerMode.dateAndTime ? 12.0 : 0.0),
+        Expanded(
+          flex: model.mode != CupertinoDatePickerMode.date ? 3 : 0,
+          child: model.mode != CupertinoDatePickerMode.date
+              ? InputDropdown(
+                  valueText:
+                      TimeOfDay.fromDateTime(safeValue).format(context) ?? "",
+                  valueStyle: model.valueStyle != null
+                      ? model.valueStyle(value)
+                      : textStylePicker,
+                  textAlign: model.focusedTextAlign,
+                  icon: model.dropDownIcon ?? defaultDropDownIcon,
+                  decoration: decoration,
+                  onPressed: () {
+                    _selectTime(context);
+                  },
+                )
+              : Container(),
+        ),
+      ],
+    );
+  }
+
+  @override
+  Widget createIosWidget(FormFieldState<DateTime> field) {
+    return InputDecorator(
+        isEmpty: model.dateTimeValidator != null,
+        decoration: decoration,
+        child: GestureDetector(
+            onTap: () {
+              showCupertinoModalPopup<void>(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return CupertinoBottomPicker(
+                        picker: CupertinoDatePicker(
+                            mode: model.mode ?? CupertinoDatePickerMode.date,
+                            minimumDate: model.firstDate ?? DateTime(2015, 8),
+                            maximumDate: model.lastDate ?? DateTime(2101),
+                            use24hFormat: true,
+                            initialDateTime: safeValue,
+                            onDateTimeChanged: (date) {
+                              didChange(date);
+                              model.onDateTimeChanged(date);
+                            }));
+                  });
+            },
+            child: CupertinoListItem(
+                decoration: BoxDecoration(
+                    color: Colors.transparent,
+                    border: Border.all(color: Colors.transparent)),
+                children: [
+                  Text(
+                      model.labelText ??
+                          model.decoration?.labelText ??
+                          'DateTime',
+                      style: model.decoration?.labelStyle),
+                  Text(
+                    model.valueFormat != null
+                        ? model.valueFormat(safeValue)
+                        : DateFormat.yMd().format(value),
+                    style: model.valueStyle == null
+                        ? const TextStyle(color: CupertinoColors.inactiveGray)
+                        : model.valueStyle(safeValue),
+                  )
+                ])));
+  }
+
+  @override
+  bool isPlatformFlipped() => XTextEditField.platformFlipped;
 }
