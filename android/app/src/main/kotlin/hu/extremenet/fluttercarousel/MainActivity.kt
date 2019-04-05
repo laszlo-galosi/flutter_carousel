@@ -6,6 +6,7 @@ import io.flutter.app.FlutterActivity
 import io.flutter.plugins.GeneratedPluginRegistrant
 import android.view.WindowManager;
 import android.view.ViewTreeObserver.OnGlobalLayoutListener
+import com.flutter_webview_plugin.FlutterWebviewPlugin
 
 class MainActivity : FlutterActivity(), OnGlobalLayoutListener {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -13,6 +14,7 @@ class MainActivity : FlutterActivity(), OnGlobalLayoutListener {
         //make transparent status bar
         getWindow().setStatusBarColor(0x00000000)
         GeneratedPluginRegistrant.registerWith(this@MainActivity)
+//        FlutterWebviewPlugin.registerWith(this.registrarFor("com.flutter_webview_plugin.FlutterWebviewPlugin"))
 
         getFlutterView().viewTreeObserver.addOnGlobalLayoutListener(this)
     }

@@ -14,6 +14,16 @@ final List<NavigationItem> navigationMenuItems = [
         controller.close();
       }),
   new NavigationItem(
+      title: "Web Demo",
+      description: "Demonstrates WebViews and Html widget",
+      routeName: "/webdemo",
+      icon: Icon(Icons.web),
+      navigationCallback: (drawerState, controller) {
+        drawerState.setShouldGoBack(false);
+        drawerState.navigator?.currentState?.pushReplacementNamed("/webdemo");
+        controller.close();
+      }),
+  new NavigationItem(
       title: "Form Demo",
       description:
           "Input form demo, showcasing various input widgets and its functionality.",

@@ -11,6 +11,7 @@ import 'package:flutter_carousel/scratch_demo/scratch_card_view_model.dart';
 import 'package:flutter_carousel/scratch_demo/scratch_demo_view.dart';
 import 'package:flutter_carousel/services/napisorsjegy_api.dart';
 import 'package:flutter_carousel/shopping_cart/shopping_cart_view.dart';
+import 'package:flutter_carousel/webdemo/webdemo_view.dart';
 import 'package:flutter_carousel/widget_demo/widget_demo_view.dart';
 
 class NavigationDrawerWidget extends StatelessWidget {
@@ -102,6 +103,8 @@ Widget getPageForRouteName(String routeName) {
           viewModel: InfiniteListDemoViewModel(api: NapisorsjegyApiService()));
     case "/form_demo":
       return new FormDemoPageWidget(viewModel: FormDemoViewModel());
+    case "/webdemo":
+      return new WebDemoPageWidget();
     default:
       return Center(
           child: Container(

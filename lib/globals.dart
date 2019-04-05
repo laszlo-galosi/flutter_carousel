@@ -20,7 +20,7 @@ Logger _logger;
 
 Logger get log => _logger;
 
-void initLogger(String name, {String package = 'napisorsjegy'}) {
+void initLogger(String name, {String package = 'flutter_carousel'}) {
   hierarchicalLoggingEnabled = true;
   _logger = new Logger(name);
   _logger.level = Level.ALL;
@@ -37,7 +37,7 @@ void initLogger(String name, {String package = 'napisorsjegy'}) {
   });
 }
 
-Logger newLogger(String name, {String package = 'napisorsjegy'}) {
+Logger newLogger(String name, {String package = 'flutter_carousel'}) {
   hierarchicalLoggingEnabled = true;
   final logger = new Logger(name);
   logger.level = Level.ALL;

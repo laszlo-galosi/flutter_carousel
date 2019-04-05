@@ -18,7 +18,7 @@ class _CarouselPageWidgetState extends State<CarouselPageWidget> {
         child: new Scaffold(
             appBar: AppBar(
               title: Text(navState.selectedItem?.title ?? "",
-                  style: res.textStyleTitleDark),
+                  style: res.textStyleTitleDark,),
               leading: IconButton(
                 icon: Icon(
                     navState.shouldGoBack ? res.backIcon(context) : Icons.menu),
@@ -48,7 +48,7 @@ class CarouselWidgetView extends StatelessWidget {
     CarouselSlider carouselSlider = CarouselSlider(
       items: _carouselWidthIndicatorUI,
       aspectRatio: 2.0,
-      updateCallback: (index) {
+      onPageChanged: (index) {
         state.setCurrentPage(index);
       },
       autoPlay: state.autoPlay,

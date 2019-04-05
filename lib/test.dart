@@ -1,77 +1,58 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_webview_plugin/flutter_webview_plugin.dart';
+import 'package:jaguar/jaguar.dart';
+import 'package:jaguar_flutter_asset/jaguar_flutter_asset.dart';
 
-void main() => runApp(MyApp());
+final flutterWebviewPlugin = new FlutterWebviewPlugin();
+
+main() async {
+  final server = Jaguar();
+  server.addRoute(serveFlutterAssets());
+  await server.serve(logRequests: true);
+
+  server.log.onRecord.listen((r) => print(r));
+
+  runApp(MyApp());
+}
 
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Test',
-      theme: ThemeData(
+    return new MaterialApp(
+      title: 'Jaguar Demo',
+      theme: new ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: HomePage(),
+      home: new MyHomePage(title: 'Jaguar Demo'),
     );
   }
 }
 
-class HomePage extends StatefulWidget {
-  @override
-  HomePageState createState() => new HomePageState();
-}
+class MyHomePage extends StatelessWidget {
+  MyHomePage({Key key, this.title}) : super(key: key);
 
-class HomePageState extends State<HomePage> {
-  FocusNode _focusNode;
-  TextAlign _textAlign = TextAlign.start;
-
-  @override
-  void initState() {
-    super.initState();
-    _focusNode = new FocusNode();
-    _focusNode.addListener(_handleFocusChanged);
-//    _handleFocusChanged();
-  }
-
-  void _handleFocusChanged() {
-    setState(() {
-      _textAlign = _focusNode.hasFocus ? TextAlign.start : TextAlign.center;
-    });
-  }
-
-  @override
-  void dispose() {
-    _focusNode.removeListener(_handleFocusChanged);
-    super.dispose();
-  }
+  final String title;
 
   @override
   Widget build(BuildContext context) {
-    return new Scaffold(
-        appBar: AppBar(title: Text('Test')),
-        body: Column(children: [
-          new TextFormField(
-            decoration: InputDecoration(
-              border: const UnderlineInputBorder(),
-              filled: true,
-              hintText: "Enter your full name",
-              labelText: "Name",
-            ),
-            textAlign: _textAlign,
-            initialValue: '10000',
-            focusNode: _focusNode,
-            autofocus: true,
+    return new WebviewScaffold(
+        url: 'http://localhost:8080/filechooser.html',
+        appBar: new AppBar(
+          title: new Text(title),
+        ),
+        initialChild: Container(
+          width: double.infinity,
+          height: double.infinity,
+          alignment: AlignmentDirectional.bottomEnd,
+          padding: EdgeInsets.all(16.0),
+          child: new FloatingActionButton(
+            onPressed: () {
+              flutterWebviewPlugin
+                  .launch('http://localhost:8080/filechooser.html');
+            },
+            tooltip: 'Launch',
+            child: new Icon(Icons.web),
           ),
-          SizedBox(
-            height: 24.0,
-          ),
-          FlatButton(
-            color: Colors.indigo,
-            textColor: Colors.white,
-            child: Text('${_focusNode.hasFocus ? "Unfocus" : "Focus"} field.'),
-            onPressed: () => _focusNode.hasFocus
-                ? _focusNode.unfocus()
-                : FocusScope.of(context).requestFocus(_focusNode),
-          ),
-        ]));
+        ));
   }
 }
